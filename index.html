@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>When Can I Retire? — A FIRE Monte-Carlo Simulator</title>
+<meta name="description" content="A free retirement simulator that runs thousands of randomized market scenarios to estimate the chance your money lasts — and the earliest age you can safely retire. Runs entirely in your browser." />
+<style>
+  :root{
+    --ink:#1a1a2e; --paper:#FBF8F1; --rule:#E5DCC7; --soft:#6B7280;
+    --accent:#D4A537; --teal:#15868C; --good:#1f9d6b; --bad:#c0453b;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--paper);color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.7;font-size:18px}
+  .hero{width:100%;background:#14142b;overflow:hidden}
+  .hero svg{width:100%;height:240px;display:block}
+  .container{max-width:880px;margin:0 auto;padding:36px 24px 80px}
+  .kicker{text-transform:uppercase;letter-spacing:.16em;font-family:'Helvetica Neue',Arial,sans-serif;font-size:13px;color:var(--teal);font-weight:700;text-align:center;margin-bottom:12px}
+  h1{font-size:38px;line-height:1.18;text-align:center;margin:0 0 14px}
+  .lede{font-size:20px;color:#33334d;text-align:center;margin:0 auto 6px;max-width:680px}
+  .byline{color:var(--soft);font-style:italic;text-align:center;margin:18px 0 30px}
+  h2{font-size:26px;margin:48px 0 14px;border-bottom:1px solid var(--rule);padding-bottom:8px}
+  p{margin:0 0 16px}
+  a{color:var(--teal)}
+  .app{background:#fff;border:1px solid var(--rule);border-radius:14px;padding:26px;margin:28px 0;font-family:'Helvetica Neue',Arial,sans-serif}
+  .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 26px}
+  .field{display:flex;flex-direction:column;gap:6px}
+  .field label{font-size:13.5px;color:#444;font-weight:600}
+  .field .hint{font-size:12px;color:var(--soft);font-weight:400}
+  .field input[type=number]{font:inherit;font-size:16px;padding:9px 11px;border:1px solid #cfc7b4;border-radius:8px;background:#fdfcf8}
+  .field .row{display:flex;align-items:center;gap:10px}
+  .field input[type=range]{flex:1}
+  .field .val{min-width:62px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:22px;align-items:center}
+  button{font:inherit;font-weight:700;font-size:15px;border:none;border-radius:9px;padding:13px 22px;cursor:pointer}
+  #run{background:var(--ink);color:#fff}
+  #earliest{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+  button:active{transform:translateY(1px)}
+  .result{margin-top:26px;display:none}
+  .verdict{display:flex;flex-wrap:wrap;gap:22px;align-items:center;border:1px solid var(--rule);border-radius:12px;padding:20px 24px;background:#fcfaf4}
+  .gauge{font-size:54px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .verdict .meta{font-size:14.5px;color:#444}
+  .verdict .meta b{font-size:16px}
+  canvas{width:100%;height:auto;display:block;margin-top:22px;border:1px solid var(--rule);border-radius:10px;background:#fff}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:13px;color:#444;margin-top:10px;justify-content:center}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:22px;height:10px;border-radius:3px;display:inline-block}
+  .note{background:#fff;border:1px solid var(--rule);border-left:4px solid var(--teal);border-radius:8px;padding:14px 20px;font-size:14.5px;color:#444;font-family:'Helvetica Neue',Arial,sans-serif;margin:24px 0}
+  .footer{text-align:center;color:var(--soft);font-size:14px;margin-top:50px;font-family:'Helvetica Neue',Arial,sans-serif}
+  @media(max-width:620px){h1{font-size:29px}.grid{grid-template-columns:1fr}.gauge{font-size:44px}}
+</style>
+</head>
+<body>
+<div class="hero">
+  <svg viewBox="0 0 880 240" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Many possible market paths fanning out over time">
+    <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1c3d"/><stop offset="1" stop-color="#101025"/></linearGradient></defs>
+    <rect width="880" height="240" fill="url(#bg)"/>
+    <g fill="none" stroke-width="2" opacity="0.85">
+      <path d="M0 170 C160 150 300 120 440 110 C600 98 720 70 880 40" stroke="#1f9d6b"/>
+      <path d="M0 175 C160 168 300 160 440 150 C600 140 720 120 880 96" stroke="#D4A537"/>
+      <path d="M0 178 C160 176 300 176 440 172 C600 170 720 168 880 150" stroke="#15868C"/>
+      <path d="M0 182 C160 188 300 196 440 200 C600 206 720 214 880 220" stroke="#c0453b" opacity="0.7"/>
+    </g>
+    <g fill="#3a3a63" opacity="0.5"><circle cx="0" cy="180" r="4"/></g>
+  </svg>
+</div>
+<div class="container">
+  <p class="kicker">Interactive tool · runs in your browser</p>
+  <h1>When Can I Retire?</h1>
+  <p class="lede">A single number like "save 25× your spending" hides all the risk. This runs <strong>thousands of randomized market scenarios</strong> to estimate the real chance your money lasts.</p>
+  <p class="byline">By Jeremy Lee</p>
+
+  <div class="app">
+    <div class="grid">
+      <div class="field"><label>Current age</label><input id="age" type="number" value="32" min="18" max="80"></div>
+      <div class="field"><label>Planned retirement age</label><input id="retire" type="number" value="50" min="30" max="85"></div>
+      <div class="field"><label>Current invested savings ($)</label><input id="balance" type="number" value="150000" step="1000"></div>
+      <div class="field"><label>Annual contribution until retirement ($)</label><input id="contrib" type="number" value="40000" step="1000"></div>
+      <div class="field"><label>Annual spending in retirement ($, today's dollars)<span class="hint">what you'll live on each year</span></label><input id="spend" type="number" value="60000" step="1000"></div>
+      <div class="field"><label>Plan until age</label><input id="until" type="number" value="95" min="70" max="105"></div>
+      <div class="field"><label>Expected real return <span class="hint">after inflation</span></label><div class="row"><input id="ret" type="range" min="1" max="9" step="0.1" value="5"><span class="val" id="retv">5.0%</span></div></div>
+      <div class="field"><label>Market volatility <span class="hint">year-to-year swings</span></label><div class="row"><input id="vol" type="range" min="4" max="22" step="0.5" value="13"><span class="val" id="volv">13.0%</span></div></div>
+    </div>
+    <div class="actions">
+      <button id="run">▶ Run 5,000 simulations</button>
+      <button id="earliest">Find earliest age for 90% success</button>
+    </div>
+
+    <div class="result" id="result">
+      <div class="verdict">
+        <div class="gauge" id="gauge">—</div>
+        <div class="meta" id="meta"></div>
+      </div>
+      <canvas id="chart" width="1640" height="720"></canvas>
+      <div class="legend">
+        <span><i class="sw" style="background:#cfe8dc"></i>10th–90th percentile</span>
+        <span><i class="sw" style="background:#7cc4a6"></i>25th–75th percentile</span>
+        <span><i class="sw" style="background:#1f9d6b"></i>median outcome</span>
+        <span><i class="sw" style="background:#c0453b"></i>zero (ran out)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><strong>How it works:</strong> each simulation plays your life forward one year at a time. Your portfolio grows by a random return drawn from a bell curve around the average and volatility you set, you add contributions until retirement, then withdraw your spending each year after. The <em>success rate</em> is the share of scenarios in which you never run out of money before your plan-until age. This is a teaching tool, not financial advice.</p></div>
+
+  <h2>Why a single rule of thumb isn't enough</h2>
+  <p>The famous "4% rule" and "25× your expenses" are averages. But you only retire once, and the order in which good and bad years arrive matters enormously: a crash in your first few retirement years is far more damaging than the same crash twenty years in. Monte-Carlo simulation captures that luck-of-the-draw by replaying your plan across thousands of randomized futures, so instead of a yes/no answer you get a <em>probability</em> — and you can see how much earlier you could retire if you accept a little more risk.</p>
+
+  <p class="footer">Built with vanilla JavaScript · no data leaves your browser · © 2026 Jeremy Lee · MIT License · <a href="https://github.com/lyhjeremy/fire-retirement-simulator">source on GitHub</a></p>
+</div>
+
+<script>
+(function(){
+  const $ = id => document.getElementById(id);
+  const fmt = n => '$' + Math.round(n).toLocaleString();
+  // sliders
+  $('ret').addEventListener('input', e=>$('retv').textContent = (+e.target.value).toFixed(1)+'%');
+  $('vol').addEventListener('input', e=>$('volv').textContent = (+e.target.value).toFixed(1)+'%');
+
+  // standard normal via Box-Muller
+  function randn(){
+    let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  function simulate(p){
+    const years = p.until - p.age;
+    const N = p.sims;
+    // store balances per year for percentiles (year 0 .. years)
+    const cols = Array.from({length:years+1}, ()=>new Float64Array(N));
+    let success = 0;
+    const mu = p.ret/100, sd = p.vol/100;
+    for(let s=0;s<N;s++){
+      let bal = p.balance, alive = true;
+      cols[0][s] = bal;
+      for(let y=1;y<=years;y++){
+        const age = p.age + y;
+        const r = mu + sd*randn();
+        bal = bal*(1+r);
+        if(age <= p.retire) bal += p.contrib;
+        else bal -= p.spend;
+        if(bal < 0){ bal = 0; alive = false; }
+        cols[y][s] = bal;
+      }
+      if(alive && cols[years][s] > 0) success++;
+    }
+    // percentile bands
+    const pct = q => cols.map(c=>{
+      const a = Array.from(c).sort((x,y)=>x-y);
+      const idx = Math.min(a.length-1, Math.floor(q*(a.length-1)));
+      return a[idx];
+    });
+    return {
+      successRate: success/N,
+      years,
+      p10:pct(0.10), p25:pct(0.25), p50:pct(0.50), p75:pct(0.75), p90:pct(0.90)
+    };
+  }
+
+  function readParams(){
+    return {
+      age:+$('age').value, retire:+$('retire').value, balance:+$('balance').value,
+      contrib:+$('contrib').value, spend:+$('spend').value, until:+$('until').value,
+      ret:+$('ret').value, vol:+$('vol').value, sims:5000
+    };
+  }
+
+  function draw(res, p){
+    const cv = $('chart'), ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height, padL=120, padR=30, padT=30, padB=70;
+    ctx.clearRect(0,0,W,H);
+    const maxY = Math.max(...res.p90, 1) * 1.05;
+    const x = y => padL + (W-padL-padR) * (y/res.years);
+    const yv = v => H-padB - (H-padT-padB) * (v/maxY);
+    // gridlines + y labels
+    ctx.font = '24px Helvetica, Arial'; ctx.fillStyle='#888'; ctx.strokeStyle='#eee5d2'; ctx.lineWidth=2;
+    for(let g=0; g<=5; g++){
+      const v = maxY*g/5, py = yv(v);
+      ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(W-padR,py); ctx.stroke();
+      ctx.textAlign='right'; ctx.fillText('$'+Math.round(v/1000)+'k', padL-12, py+8);
+    }
+    // x labels (age)
+    ctx.textAlign='center';
+    for(let g=0; g<=res.years; g+=Math.ceil(res.years/8)){
+      ctx.fillText(p.age+g, x(g), H-padB+34);
+    }
+    // retirement marker
+    const rx = x(Math.min(res.years, p.retire-p.age));
+    ctx.strokeStyle='#D4A537'; ctx.lineWidth=3; ctx.setLineDash([8,7]);
+    ctx.beginPath(); ctx.moveTo(rx,padT); ctx.lineTo(rx,H-padB); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle='#a9831f'; ctx.fillText('retire', rx, padT+22);
+    // band helper
+    const band = (lo,hi,color)=>{
+      ctx.beginPath();
+      for(let g=0;g<=res.years;g++){ const px=x(g),py=yv(hi[g]); g===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
+      for(let g=res.years;g>=0;g--){ ctx.lineTo(x(g),yv(lo[g])); }
+      ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+    };
+    band(res.p10,res.p90,'#cfe8dc');
+    band(res.p25,res.p75,'#7cc4a6');
+    // median line
+    ctx.beginPath(); ctx.lineWidth=4; ctx.strokeStyle='#1f9d6b';
+    res.p50.forEach((v,g)=>{ const px=x(g),py=yv(v); g===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
+    ctx.stroke();
+    // zero line
+    ctx.strokeStyle='#c0453b'; ctx.lineWidth=2; ctx.setLineDash([4,6]);
+    ctx.beginPath(); ctx.moveTo(padL,yv(0)); ctx.lineTo(W-padR,yv(0)); ctx.stroke(); ctx.setLineDash([]);
+    // axis titles
+    ctx.fillStyle='#555'; ctx.font='26px Helvetica, Arial';
+    ctx.fillText('Age', (padL+W-padR)/2, H-12);
+    ctx.save(); ctx.translate(34,(padT+H-padB)/2); ctx.rotate(-Math.PI/2); ctx.fillText('Portfolio value (today’s $)',0,0); ctx.restore();
+  }
+
+  function showResult(res,p){
+    $('result').style.display='block';
+    const rate = res.successRate;
+    const g = $('gauge');
+    g.textContent = Math.round(rate*100)+'%';
+    g.style.color = rate>=0.9 ? 'var(--good)' : rate>=0.75 ? '#b8860b' : 'var(--bad)';
+    const medEnd = res.p50[res.years];
+    const verdict = rate>=0.9 ? 'On track — high confidence your money lasts.'
+                  : rate>=0.75 ? 'Borderline — consider working a bit longer, saving more, or spending less.'
+                  : 'Risky — this plan runs out of money in too many scenarios.';
+    $('meta').innerHTML = `<b>${verdict}</b><br>Chance of never running out by age ${p.until}.<br>`
+      + `Median portfolio at retirement: <b>${fmt(res.p50[Math.min(res.years,p.retire-p.age)])}</b> · `
+      + `median at age ${p.until}: <b>${fmt(medEnd)}</b>`;
+    draw(res,p);
+  }
+
+  $('run').addEventListener('click', ()=>{
+    const p = readParams();
+    showResult(simulate(p), p);
+    $('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+
+  $('earliest').addEventListener('click', ()=>{
+    const base = readParams(); base.sims = 2500;
+    let found = null;
+    for(let ra = base.age+1; ra <= base.until-1; ra++){
+      const p = Object.assign({}, base, {retire:ra});
+      if(simulate(p).successRate >= 0.90){ found = ra; break; }
+    }
+    if(found){
+      $('retire').value = found;
+      const p = readParams();
+      showResult(simulate(p), p);
+      $('meta').innerHTML = `<b>Earliest age for 90% success: ${found}.</b><br>` + $('meta').innerHTML;
+    } else {
+      $('result').style.display='block';
+      $('gauge').textContent='—'; $('gauge').style.color='var(--bad)';
+      $('meta').innerHTML = '<b>No retirement age before your plan-until reaches 90% success.</b><br>Try saving more, spending less, or a higher expected return.';
+    }
+    $('result').scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+
+  // run once on load with defaults
+  window.addEventListener('load', ()=>{ const p=readParams(); showResult(simulate(p),p); });
+})();
+</script>
+</body>
+</html>
