@@ -1,0 +1,434 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>When can I retire? — 5,000 randomized futures instead of one rule of thumb</title>
+<meta name="description" content="A free browser-based FIRE Monte-Carlo simulator. It reports the probability your money lasts, not a yes or no, and will search for the earliest age you could retire at 90% confidence." />
+<meta name="theme-color" content="#FBF8F1" />
+<meta property="og:title" content="When can I retire?" />
+<meta property="og:description" content="The 4% rule is an average. You retire once. This runs thousands of randomized futures and gives you a probability." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="https://lyhjeremy.github.io/fire-retirement-simulator/overview/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #FBF8F1;
+    --card: #FFFFFF;
+    --plate: #FFFFFF;
+    --ink: #1a1a2e;
+    --ink2: #3d3d55;
+    --muted: #6B7280;
+    --rule: #E5DCC7;
+    --accent: #047857;
+    --accent2: #B45309;
+    --link: #0E7490;
+    --serif: Georgia, 'Iowan Old Style', 'Times New Roman', serif;
+    --sans: 'Source Sans 3', -apple-system, system-ui, sans-serif;
+    --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', monospace;
+    --shadow: 0 1px 2px rgba(26,26,46,.05), 0 10px 34px rgba(26,26,46,.07);
+    --spine:  92px;
+    --col:    min(100% - 2.6rem, 62rem);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --paper: #14141f;
+      --card: #1c1c2a;
+      --plate: #f7f4ec;
+      --ink: #F2EFE6;
+      --ink2: #C9C4B6;
+      --muted: #918B7D;
+      --rule: #33313f;
+      --accent: #34D399;
+      --accent2: #E3BC5E;
+      --link: #22D3EE;
+      --shadow: 0 1px 2px rgba(0,0,0,.32), 0 10px 34px rgba(0,0,0,.4);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--serif); font-size: clamp(17px, 0.55rem + 0.6vw, 19.5px);
+    line-height: 1.68; -webkit-font-smoothing: antialiased; overflow-x: hidden;
+  }
+  img { max-width: 100%; height: auto; display: block; }
+  a { color: var(--link); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  strong { font-weight: 700; color: var(--ink); }
+  code { font-family: var(--mono); font-size: .86em;
+         background: color-mix(in srgb, var(--ink) 7%, transparent);
+         padding: .12em .38em; border-radius: 4px; }
+  .wrap { width: var(--col); margin: 0 auto; }
+
+  .eyebrow { font-family: var(--mono); font-weight: 600; font-size: 11.5px;
+             letter-spacing: .17em; text-transform: uppercase; color: var(--muted);
+             margin: 0 0 14px; }
+
+  .masthead { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; padding: 30px 0 0; }
+  .logo { font-family: var(--sans); font-weight: 800; font-size: 21px;
+          letter-spacing: -.02em; display: flex; align-items: center; gap: 9px; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--accent); flex: none; }
+  .tagline { font-size: 15px; color: var(--ink2); font-family: var(--sans); }
+
+  .hero { padding: 44px 0 54px; }
+  .kicker { font-family: var(--sans); font-size: clamp(18px, 2.1vw, 23px); font-weight: 600;
+            color: var(--muted); margin: 0 0 8px; letter-spacing: -.01em; }
+  .hero h1 { font-family: var(--sans); font-size: clamp(37px, 6vw, 72px); font-weight: 800;
+             letter-spacing: -.035em; line-height: 1.04; margin: 0; max-width: 17ch; }
+  .hero-sub { margin: 24px 0 0; font-size: 1.06em; color: var(--ink2); max-width: 60ch; }
+
+  .cta-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 30px; align-items: center; }
+  .btn { display: inline-block; padding: 13px 26px; border-radius: 8px;
+         font-family: var(--sans); font-weight: 700; font-size: 16px;
+         text-decoration: none; border: 1px solid var(--ink); transition: transform .15s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--ink); color: var(--paper); }
+  .textlink { font-family: var(--sans); font-size: 16px; font-weight: 600; color: var(--ink2);
+              text-decoration: underline; text-underline-offset: 4px;
+              text-decoration-thickness: 1px; }
+  .textlink:hover { color: var(--ink); }
+
+  .claims { display: grid; grid-template-columns: 1fr; gap: 0 52px; margin: 50px 0 0; }
+  @media (min-width: 760px) { .claims { grid-template-columns: 1fr 1fr; } }
+  .claim { padding: 18px 0 20px; border-top: 1px solid var(--rule); }
+  .claim:first-child, .claim:nth-child(2) { border-top: 2px solid var(--ink); }
+  @media (max-width: 759px) { .claim:nth-child(2) { border-top: 1px solid var(--rule); } }
+  .claim .n { font-family: var(--sans); font-weight: 800; font-size: 40px; line-height: 1.05;
+              color: var(--accent); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+  .claim h3 { margin: 0 0 6px; }
+  .claim p { margin: 9px 0 0; font-size: 15.5px; color: var(--ink2); line-height: 1.5;
+             font-family: var(--sans); }
+
+  .route { position: relative; padding-bottom: 30px; }
+  .route::before { content: ""; position: absolute; left: calc(var(--spine) / 2); top: 8px;
+                   bottom: 80px; width: 2px; background: var(--rule); }
+  .stop { position: relative; padding: 0 0 76px var(--spine); }
+  .stop::before { content: ""; position: absolute; left: calc(var(--spine) / 2 - 7px); top: 7px;
+                  width: 16px; height: 16px; border-radius: 50%;
+                  background: var(--paper); border: 2px solid var(--ink); box-sizing: border-box; }
+  .stop--key::before { background: var(--accent); border-color: var(--accent); }
+  .stop--warn::before { background: var(--accent2); border-color: var(--accent2); }
+  .stop--end::before { background: var(--ink); }
+
+  h2 { font-family: var(--sans); font-size: clamp(27px, 3.7vw, 38px); font-weight: 800;
+       letter-spacing: -.027em; line-height: 1.13; margin: 12px 0 16px; max-width: 19ch; }
+  h3 { font-family: var(--sans); font-size: 17px; font-weight: 700; margin: 0 0 7px;
+       letter-spacing: -.012em; }
+  .stop p { margin: 0 0 17px; max-width: 60ch; color: var(--ink2); }
+
+  .bignum { font-family: var(--sans); font-weight: 800; font-size: clamp(74px, 10vw, 128px);
+            line-height: .86; letter-spacing: -.05em; margin: 6px 0 4px; color: var(--accent);
+            font-variant-numeric: tabular-nums; }
+  .bignum-note { font-family: var(--sans); font-size: 16px; color: var(--muted); margin: 0 0 20px; }
+
+  /* A white-background chart would glow in dark mode; the plate makes it read
+     as a deliberately printed page instead. */
+  figure { margin: 28px 0 0; }
+  .plate { background: var(--plate); border: 1px solid var(--rule); border-radius: 10px;
+           padding: 14px; box-shadow: var(--shadow); overflow: hidden; }
+  .plate img { border-radius: 4px; }
+  .plate--flush { padding: 0; }
+  .shot { border-radius: 10px; border: 1px solid var(--rule); box-shadow: var(--shadow);
+          overflow: hidden; background: var(--card); }
+  /* min() so the cap never exceeds the column on a phone */
+  .shot--narrow { max-width: min(430px, 100%); }
+  figcaption { margin-top: 11px; font-family: var(--sans); font-size: 14.5px;
+               color: var(--muted); line-height: 1.5; }
+  .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr));
+            gap: 22px; margin-top: 28px; }
+  .panels figure { margin: 0; }
+
+  .pull { margin: 30px 0 0; padding: 20px 25px; border-left: 3px solid var(--accent);
+          background: color-mix(in srgb, var(--accent) 7%, transparent);
+          border-radius: 0 8px 8px 0; }
+  .pull p { margin: 0 0 9px; color: var(--ink); max-width: none; }
+  .pull p:last-of-type { margin: 0; }
+  .pull .who { font-family: var(--mono); font-size: 11px; letter-spacing: .12em;
+               text-transform: uppercase; color: var(--muted); display: block; margin-top: 9px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(238px, 1fr));
+          gap: 1px; margin-top: 28px; background: var(--rule);
+          border: 1px solid var(--rule); border-radius: 10px; overflow: hidden; }
+  .cell { background: var(--paper); padding: 22px 20px; }
+  .cell p { font-size: 15px; margin: 0; color: var(--ink2); max-width: none;
+            line-height: 1.55; font-family: var(--sans); }
+
+  /* results tables: scroll inside their own box, never the page */
+  .tablewrap { margin-top: 26px; overflow-x: auto; border: 1px solid var(--rule);
+               border-radius: 10px; background: var(--card); }
+  table { border-collapse: collapse; width: 100%; min-width: 480px;
+          font-family: var(--sans); font-size: 15.5px; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--rule); }
+  th { font-family: var(--mono); font-size: 11px; letter-spacing: .1em;
+       text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  td { color: var(--ink2); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  .win td { color: var(--ink); font-weight: 700;
+            background: color-mix(in srgb, var(--accent) 8%, transparent); }
+
+  /* real terminal output, quoted verbatim */
+  .term { margin-top: 26px; background: #14141f; color: #e6e3da; border-radius: 10px;
+          padding: 18px 20px; overflow-x: auto; box-shadow: var(--shadow);
+          border: 1px solid #2a2a3a; }
+  .term pre { margin: 0; font-family: var(--mono); font-size: 13px; line-height: 1.62;
+              white-space: pre; }
+  .term .c { color: #9aa08f; }
+  .term .g { color: #7fd18f; }
+  .term .y { color: #E3BC5E; }
+
+  .specs { margin-top: 26px; border-top: 1px solid var(--rule); }
+  .spec { display: grid; grid-template-columns: 1fr; gap: 2px;
+          padding: 14px 0; border-bottom: 1px solid var(--rule); }
+  @media (min-width: 700px) { .spec { grid-template-columns: 178px 1fr; gap: 24px; } }
+  .spec dt { font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em;
+             text-transform: uppercase; color: var(--muted); padding-top: 4px; }
+  .spec dd { margin: 0; font-size: 16px; color: var(--ink2); font-family: var(--sans); }
+
+  .close { padding: 6px 0 80px var(--spine); position: relative; }
+  .close h2 { max-width: 20ch; }
+  footer { border-top: 1px solid var(--rule); padding: 28px 0 60px;
+           font-family: var(--sans); font-size: 14.5px; color: var(--muted); }
+  footer a { color: var(--ink2); }
+  footer p { margin: 0 0 8px; }
+
+  @media (max-width: 640px) {
+    :root { --spine: 38px; }
+    .hero { padding: 36px 0 46px; }
+    .stop { padding-bottom: 58px; }
+    .plate { padding: 9px; }
+    .term { padding: 14px 14px; }
+    .term pre { font-size: 11.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .btn { transition: none; }
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="masthead">
+    <div class="logo"><span class="dot" aria-hidden="true"></span>When Can I Retire?</div>
+    <div class="tagline">a FIRE Monte-Carlo simulator</div>
+  </header>
+
+  <section class="hero">
+    <p class="kicker">"Save 25× your spending" is an average.</p>
+    <h1>You only retire once, and averages don't tell you what that one time looks like.</h1>
+
+    <p class="hero-sub">
+      This plays your plan forward year by year, thousands of times, drawing each
+      year's return at random. What comes back is not a yes or a no but a
+      <strong>probability that your money lasts</strong>, plus a fan chart of how
+      wide the outcomes really are. It runs entirely in your browser, has no
+      backend, and nothing you type ever leaves your machine.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="../">Run your own numbers</a>
+      <a class="textlink" href="https://github.com/lyhjeremy/fire-retirement-simulator">or read the code</a>
+    </div>
+
+    <figure style="margin-top:38px">
+      <img width="1556" height="1040" class="shot" src="result-card.png" fetchpriority="high"
+        alt="The simulator's verdict card reading 56% chance of never running out by age 95, with a fan chart of portfolio value from age 32 to 95 showing the 10th–90th and 25th–75th percentile bands widening after the marked retirement age." />
+      <figcaption>
+        A real run: retire at 50 on $150k saved and $40k a year in, spending $60k.
+        <strong>56%</strong>. Not a plan you would want to bet on.
+      </figcaption>
+    </figure>
+
+    <div class="claims">
+      <div class="claim">
+        <div class="n">5,000</div>
+        <p>randomized market futures per run, each a full year-by-year path from
+           today to your plan-until age.</p>
+      </div>
+      <div class="claim">
+        <div class="n">3% → 90%</div>
+        <p>what nine more years of work did to the same plan. The simulator
+           finds that crossing point for you.</p>
+      </div>
+      <div class="claim">
+        <div class="n">0</div>
+        <p>bytes sent anywhere. No backend, no account, no dependencies — one
+           HTML file and a <code>&lt;canvas&gt;</code>.</p>
+      </div>
+      <div class="claim">
+        <div class="n">Free</div>
+        <p>and open source. No upsell to a financial adviser at the end of it.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="wrap">
+<div class="route">
+
+  <section class="stop">
+    <p class="eyebrow">Start · why not a rule of thumb</p>
+    <h2>Sequence of returns is the thing rules of thumb cannot see</h2>
+    <p>
+      The 4% rule and "25× expenses" both describe an average future. The trouble
+      is that a crash in your first three years of retirement is far more damaging
+      than the identical crash twenty years later, because you are selling assets
+      to live on while they are down and they never get the chance to recover.
+    </p>
+    <p>
+      An average return hides that entirely. Two futures with the same mean can end
+      with one person comfortable and the other broke at 74, purely on the order
+      the good and bad years arrived. Simulating thousands of orderings turns a
+      fragile yes-or-no into an honest probability.
+    </p>
+  </section>
+
+  <section class="stop stop--key">
+    <p class="eyebrow">↓ the demonstration</p>
+    <h2>Nine years of work, 3% to 90%</h2>
+    <p>
+      The clearest way to show what the simulator is for is to run the same plan
+      three times, moving only the retirement age. Same savings, same
+      contributions, same spending, same assumptions.
+    </p>
+    <div class="panels">
+      <figure>
+        <img width="1556" height="1040" class="shot" src="result-fail.png" loading="lazy"
+          alt="Verdict card reading 3% chance of never running out, with a fan chart whose median portfolio line peaks at retirement age 40 and falls to zero by the early fifties." />
+        <figcaption>
+          <strong>Retire at 40 → 3%.</strong> The median path hits zero in the
+          early fifties. Median portfolio at age 95: <strong>$0</strong>.
+        </figcaption>
+      </figure>
+      <figure>
+        <img width="1556" height="1096" class="shot" src="earliest.png" loading="lazy"
+          alt="Verdict card reading 90% and earliest age for 90% success: 59, with a fan chart whose bands rise steadily throughout retirement." />
+        <figcaption>
+          <strong>Retire at 59 → 90%.</strong> Found automatically by the
+          earliest-age search. Median at 95: <strong>$5,558,280</strong>.
+        </figcaption>
+      </figure>
+    </div>
+    <p style="margin-top:26px">
+      Between those two sits the 50-year-old plan at the top of this page, at
+      <strong>56%</strong> — a coin flip dressed up as a retirement. That is
+      exactly the case a single-number rule of thumb would wave through, and the
+      case a probability makes impossible to ignore.
+    </p>
+    <div class="pull">
+      <p>"Find earliest age for 90% success" searches the retirement ages for you,
+         so you get the answer to the question you actually had rather than the one
+         you knew how to ask.</p>
+      <span class="who">The button that does the useful work</span>
+    </div>
+  </section>
+
+  <section class="stop">
+    <p class="eyebrow">↓ reading the chart</p>
+    <h2>The bands matter more than the line</h2>
+    <p>
+      The dark line is the median outcome, and it is the least interesting thing on
+      the chart. The shaded bands are the <strong>25th–75th</strong> and
+      <strong>10th–90th</strong> percentiles, and their width is the honest
+      picture: by the end of a long retirement the plausible outcomes span an order
+      of magnitude.
+    </p>
+    <p>
+      The red dashed line at zero is the one that decides the headline number. The
+      success rate is simply the share of the 5,000 paths that never touch it
+      before your plan-until age.
+    </p>
+    <figure>
+      <img width="2880" height="1920" class="shot" src="app-result.png" loading="lazy"
+        alt="The full simulator page at desktop width, with the input panel of age, savings, contributions, spending, expected real return and volatility on the left and the verdict card and fan chart on the right." />
+      <figcaption>The whole app. Eight inputs, two buttons, one honest answer.</figcaption>
+    </figure>
+  </section>
+
+  <section class="stop">
+    <p class="eyebrow">↓ on a phone</p>
+    <h2>The same tool, one column</h2>
+    <p>
+      The layout collapses to a single column on a phone with the chart still
+      legible, because this is the sort of thing people actually work out on the
+      train rather than at a desk.
+    </p>
+    <figure>
+      <img width="1170" height="2532" class="shot shot--narrow" src="mobile.png" loading="lazy"
+        alt="The simulator on a 390 pixel wide phone screen, with inputs stacked in one column above the verdict card and fan chart." />
+      <figcaption>390px wide, nothing cut off.</figcaption>
+    </figure>
+  </section>
+
+  <section class="stop stop--warn">
+    <p class="eyebrow">↓ what this cannot tell you</p>
+    <h2>A model of markets, not a forecast of them</h2>
+    <p>
+      Returns are drawn from a normal distribution around the average real return
+      and volatility you choose, using a Box–Muller transform. Real markets are not
+      normal: they have fatter tails and their bad years cluster together in a way
+      independent draws do not reproduce. A Monte-Carlo built this way tends to be
+      <strong>slightly optimistic about the worst cases</strong>.
+    </p>
+    <p>
+      It also models a single portfolio with a constant real return and constant
+      real spending. No glide path, no taxes, no pension, no lumpy costs, no
+      spending less in a bad year — which is the most important missing behaviour,
+      because real retirees do adjust and that flexibility is worth a lot of
+      success rate.
+    </p>
+    <p>
+      Treat the output as a way to compare plans against each other, not as a
+      prediction about your life. <strong>This is an educational tool, not
+      financial advice.</strong>
+    </p>
+  </section>
+
+  <section class="stop stop--end">
+    <p class="eyebrow">Finish · what it is built on</p>
+    <h2>One file, no dependencies</h2>
+    <p>
+      The whole thing is a single HTML file with vanilla JavaScript. There is no
+      framework, no build step, no backend and no analytics. You can read the
+      entire simulation in one sitting, which for a tool making claims about your
+      retirement seems like the right property to have.
+    </p>
+    <dl class="specs">
+      <div class="spec"><dt>Simulation</dt><dd>Year-by-year: contributions until retirement, then withdrawals, each year's return drawn at random</dd></div>
+      <div class="spec"><dt>Return draw</dt><dd>Box–Muller normal around your chosen real return and volatility</dd></div>
+      <div class="spec"><dt>Success rate</dt><dd>The share of paths that never hit zero before your plan-until age</dd></div>
+      <div class="spec"><dt>Earliest-age search</dt><dd>Re-runs the simulation across retirement ages to find the first that clears 90%</dd></div>
+      <div class="spec"><dt>Chart</dt><dd>Drawn directly on a <code>&lt;canvas&gt;</code>, no charting library</dd></div>
+      <div class="spec"><dt>Privacy</dt><dd>No backend and no network calls. Your numbers never leave the browser</dd></div>
+      <div class="spec"><dt>Sibling tool</dt><dd>The <a href="https://lyhjeremy.github.io/epub-reading-level-analyzer/">EPUB reading-level analyzer</a>, built the same way — one file, everything client-side</dd></div>
+    </dl>
+  </section>
+
+</div>
+</div>
+
+<div class="wrap">
+  <section class="close">
+    <h2>Get a probability, not a rule of thumb</h2>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="../">Run your own numbers</a>
+      <a class="textlink" href="https://github.com/lyhjeremy/fire-retirement-simulator">or read the code</a>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      When Can I Retire? ·
+      <a href="../">App</a> ·
+      <a href="https://github.com/lyhjeremy/fire-retirement-simulator">Source</a> ·
+      MIT © 2026 Jeremy Lee
+    </p>
+    <p>An educational tool. Not financial advice.</p>
+  </footer>
+</div>
+</body>
+</html>

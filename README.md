@@ -6,6 +6,7 @@ and reports the *probability* your money lasts — plus the earliest age you cou
 retire at 90% confidence.
 
 > 🌐 **Try it:** https://lyhjeremy.github.io/fire-retirement-simulator/
+> 📖 **Product overview:** https://lyhjeremy.github.io/fire-retirement-simulator/overview/
 
 ## What it does
 - Plays your plan forward year by year: contributions until retirement, then
