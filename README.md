@@ -1,12 +1,14 @@
-# When Can I Retire? — a FIRE Monte-Carlo simulator
+# When Can I Retire?: a FIRE Monte-Carlo simulator
+
+Design and copy follow [these standards](https://github.com/lyhjeremy/lyhjeremy/blob/main/DESIGN_STANDARDS.md).
 
 A free, browser-based retirement simulator. Instead of a single rule of thumb
 ("save 25× your spending"), it runs **thousands of randomized market scenarios**
-and reports the *probability* your money lasts — plus the earliest age you could
+and reports the *probability* your money lasts, plus the earliest age you could
 retire at 90% confidence.
 
-> 🌐 **Try it:** https://lyhjeremy.github.io/fire-retirement-simulator/
-> 📖 **Product overview:** https://lyhjeremy.github.io/fire-retirement-simulator/overview/
+> **Try it:** https://lyhjeremy.github.io/fire-retirement-simulator/
+> **Product overview:** https://lyhjeremy.github.io/fire-retirement-simulator/overview/
 
 ## What it does
 - Plays your plan forward year by year: contributions until retirement, then
@@ -23,7 +25,7 @@ crash later. Simulating thousands of randomized futures turns a fragile yes/no
 answer into an honest probability.
 
 ## Tech
-Vanilla HTML/CSS/JavaScript, no dependencies, no backend — everything runs in your
+Vanilla HTML/CSS/JavaScript, no dependencies, no backend, everything runs in your
 browser and no data leaves your machine. The chart is drawn on a `<canvas>`;
 returns use a Box–Muller normal draw.
 
