@@ -242,23 +242,81 @@
   .stop--key::before, .stop--warn::before, .stop--end::before { background: var(--paper); border: 0; }
   .stop--end::before { color: var(--ink); }
 
+</style>
+</head>
+<body>
+<style>
+  /* FIRE: a calculation sheet. Green = the plan's median or success, amber = money ran out. */
+  .calc { border: 1px solid var(--edge); background: var(--card); }
+  .calc-head { display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; padding: 9px 16px;
+               border-bottom: 1px solid var(--edge); font: 600 11.5px/1.4 var(--mono); letter-spacing: .1em;
+               text-transform: uppercase; color: var(--muted); }
+  .calc-body { padding: 16px 16px 10px; }
+  .calc .calc-title { font: 600 clamp(20px, 2.6vw, 26px)/1.2 var(--display); color: var(--ink); margin: 0 0 4px; max-width: none; letter-spacing: -.01em; }
+  .calc .calc-sub { font: 14px/1.5 var(--sans); color: var(--muted); margin: 0 0 12px; max-width: none; }
+  .calc .calc-foot { margin: 0; max-width: none; padding: 10px 16px 12px; border-top: 1px solid var(--rule);
+                     font: 14px/1.5 var(--sans); color: var(--muted); }
+  .two { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px 26px; }
+  @media (max-width: 820px) { .two { grid-template-columns: 1fr; } }
+  .plot { width: 100%; min-height: 220px; }
+  .plot svg { display: block; width: 100%; height: auto; overflow: visible; }
+  .plot.wait { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+  @media (prefers-reduced-motion: no-preference) {
+    .plot.wait { animation: pulse 1.2s ease-in-out infinite alternate; }
+    @keyframes pulse { from { opacity: .55; } to { opacity: 1; } }
+  }
+  .ax { stroke: var(--rule); stroke-width: 1; }
+  .ax-t { fill: var(--muted); font: 11px var(--mono); }
+  .ax-l { fill: var(--ink2); font: 600 11px var(--mono); }
+  .ln-s { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .pt-s { fill: var(--accent); }
+  .ref { stroke: var(--accent2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .ref-t { fill: var(--accent2); font: 600 11px var(--mono); }
+  .lab { fill: var(--ink); font: 600 12px var(--mono); }
+  .cur { stroke: var(--ink); stroke-width: 1; }
+  .cur-d { fill: var(--ink); }
+  .b1 { fill: color-mix(in srgb, var(--accent) 22%, var(--card)); }
+  .b2 { fill: color-mix(in srgb, var(--accent) 50%, var(--card)); }
+  .md { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .zero { stroke: var(--accent2); stroke-width: 1.5; stroke-dasharray: 5 4; }
+  .rmk { stroke: var(--ink); stroke-width: 1; stroke-dasharray: 4 3; }
+  .p-bad { fill: none; stroke: var(--accent2); stroke-width: 2.5; }
+  .p-good { fill: none; stroke: var(--accent); stroke-width: 2.5; }
+  .ctrl { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px 14px; align-items: center;
+          font: 13px var(--mono); color: var(--ink2); margin: 2px 0 12px; }
+  .ctrl input[type=range] { width: 100%; accent-color: var(--accent); }
+  .ctrl output { font: 600 20px var(--mono); color: var(--ink); min-width: 2.5ch; text-align: right; }
+  .read { font: 13px/1.55 var(--mono); color: var(--ink); margin: 6px 0 0; min-height: 3.1em; max-width: none; }
+  .read b { color: var(--accent); }
+  .read em { font-style: normal; color: var(--accent2); font-weight: 600; }
+  .lg { display: flex; flex-wrap: wrap; gap: 4px 16px; font: 12px var(--mono); color: var(--ink2); margin: 6px 0 4px; }
+  .lg span::before { content: ""; display: inline-block; width: 18px; height: 9px; margin-right: 6px; vertical-align: -1px; }
+  .lg .l1::before { background: color-mix(in srgb, var(--accent) 22%, var(--card)); }
+  .lg .l2::before { background: color-mix(in srgb, var(--accent) 50%, var(--card)); }
+  .lg .l3::before { height: 3px; vertical-align: 2px; background: var(--accent); }
+  .lg .l4::before { height: 3px; vertical-align: 2px; background: var(--accent2); }
 
   .runlog { margin-top: 30px; border: 1px solid var(--edge); background: var(--card); }
   .runlog-head { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding: 9px 16px; border-bottom: 1px solid var(--edge); font: 600 11.5px/1.4 var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
   .runlog table { min-width: 560px; font-family: var(--mono); font-size: 14.5px; background: transparent; }
   .runlog td.age { font-weight: 600; color: var(--ink); }
   .runlog td.pct { font-weight: 600; color: var(--accent); font-size: 20px; }
+  .runlog td.pct.low { color: var(--accent2); }
   .runlog .meter { display: block; height: 10px; border: 1px solid var(--edge); width: 150px; background: var(--paper); }
   .runlog .meter i { display: block; height: 100%; background: var(--accent); }
   .runlog .meter i.low { background: var(--accent2); }
   .runlog .runlog-foot { max-width: none; margin: 0; padding: 10px 16px; border-top: 1px solid var(--rule); font-family: var(--sans); font-size: 14px; color: var(--muted); }
+  .seqstats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border-top: 1px solid var(--rule); margin-top: 10px; }
+  .seqstats div { padding: 10px 12px 4px 0; font: 12px/1.4 var(--mono); color: var(--muted); }
+  .seqstats b { display: block; font: 600 18px/1.3 var(--mono); color: var(--ink); }
+  .seqstats b.bad { color: var(--accent2); } .seqstats b.good { color: var(--accent); }
+  @media (max-width: 560px) { .seqstats { grid-template-columns: 1fr; } .seqstats div { padding: 8px 0 0; } }
 </style>
-</head>
-<body>
+
 <div class="wrap">
   <header class="masthead">
     <div class="logo">When can I retire?</div>
-    <div class="tagline">FIRE Monte Carlo simulator / v1 / browser only</div>
+    <div class="tagline">FIRE Monte Carlo simulator / browser only</div>
   </header>
 
   <section class="hero">
@@ -266,13 +324,12 @@
     <h1>The odds your savings last to 95, and the earliest age that gets them to 90%</h1>
 
     <p class="hero-sub">
-      You enter eight numbers: age, retirement age, savings, yearly contribution,
-      yearly spending, plan-until age, expected real return and volatility. The
-      simulator plays that plan forward one year at a time, 5,000 times, with each
-      year's return drawn at random. It reports the share of those paths that never
-      run out of money and draws the 10th to 90th percentile spread as a fan chart.
-      One button searches retirement ages for the first one that reaches 90%. It all
-      runs in the browser; there is no server.
+      You enter eight numbers: age, retirement age, savings, yearly
+      contribution, yearly spending, plan-until age, expected real return and
+      volatility. The simulator plays the plan forward a year at a time, 5,000
+      times, with each year's return drawn at random, and reports the share of
+      paths that never run out of money. Moving the retirement age alone takes
+      the default plan from almost certain failure to 90%.
     </p>
 
     <div class="cta-row">
@@ -280,38 +337,29 @@
       <a class="textlink" href="https://github.com/lyhjeremy/fire-retirement-simulator">Source on GitHub</a>
     </div>
 
-    <figure style="margin-top:38px">
-      <img width="1556" height="1040" class="shot" src="result-card.png" fetchpriority="high"
-        alt="The simulator's result card reading 56% chance of never running out by age 95, above a fan chart of portfolio value from age 32 to 95 in which the 10th to 90th percentile band widens sharply after the marked retirement age of 50." />
-      <figcaption>
-        The default plan: age 32, $150k saved, $40k a year in, retire at 50 and
-        spend $60k a year. 56% of paths last to 95. The median portfolio at 95 is
-        $742,816, and the 10th percentile reaches zero in the mid-seventies.
-      </figcaption>
+    <figure class="calc" id="curve" style="margin-top:42px">
+      <div class="calc-head"><span>Default plan, every retirement age from 35 to 70</span><span>the app's simulate()</span></div>
+      <div class="calc-body">
+        <p class="calc-title" id="curve-title">Same plan, only the retirement age moves: 3% at 40, 56% at 50, 90% at 59</p>
+        <p class="calc-sub">Age 32, $150k saved, $40k a year in, $60k a year out once retired, 5.0% real return, 13.0% volatility, plan until 95.</p>
+        <div class="ctrl">
+          <label for="age-in">Retire at</label>
+          <input type="range" id="age-in" min="35" max="70" step="1" value="50" />
+          <output id="age-out" for="age-in">50</output>
+        </div>
+        <div class="two">
+          <div>
+            <div class="plot wait" id="plot-s" aria-hidden="true"></div>
+          </div>
+          <div>
+            <div class="plot wait" id="plot-f" aria-hidden="true"></div>
+            <div class="lg"><span class="l1">10th to 90th</span><span class="l2">25th to 75th</span><span class="l3">median</span></div>
+          </div>
+        </div>
+        <p class="read" id="read" aria-live="polite">Computing 36 plans of 5,000 paths in your browser.</p>
+      </div>
+      <figcaption class="calc-foot">Left: share of 5,000 paths that last to 95, for each retirement age. Right: the spread of portfolio values for the age on the slider. Computed on this page with the app's own simulation code and a fixed random seed, so every age sees the same 5,000 market histories. A run in the app uses fresh random numbers and lands within a point or two.</figcaption>
     </figure>
-
-    <div class="claims">
-      <div class="claim">
-        <div class="n">3% / 56% / 90%</div>
-        <p>Success rate of the same plan retiring at 40, 50 and 59. Only the
-           retirement age changes.</p>
-      </div>
-      <div class="claim">
-        <div class="n">5,000</div>
-        <p>Random paths per run, each one year-by-year from today to the plan-until
-           age.</p>
-      </div>
-      <div class="claim">
-        <div class="n">59</div>
-        <p>Earliest retirement age that clears 90% for the default plan, found by
-           the built-in search.</p>
-      </div>
-      <div class="claim">
-        <div class="n">0</div>
-        <p>Network requests made by the simulator. One HTML file, vanilla
-           JavaScript, a <code>&lt;canvas&gt;</code> chart.</p>
-      </div>
-    </div>
   </section>
 </div>
 
@@ -320,11 +368,11 @@
 
   <section class="stop stop--key">
     <p class="eyebrow">Test log</p>
-    <h2>One plan, three retirement ages</h2>
+    <h2>Retiring at 50 is where a rule of thumb misleads</h2>
     <p>
-      I ran the default plan three times and moved only the retirement age;
-      savings, contributions, spending, the 5.0% real return and the 13.0%
-      volatility stayed where they were.
+      Before writing this page I ran the default plan in the app three times
+      and moved only the retirement age. Savings, contributions, spending, the
+      5.0% real return and the 13.0% volatility stayed where they were.
     </p>
     <div class="runlog">
       <div class="runlog-head"><span>Default plan, plan until 95</span><span>5,000 paths each</span></div>
@@ -332,51 +380,47 @@
         <table>
           <thead><tr><th>Retire at</th><th>Success</th><th></th><th>Median at retirement</th><th>Median at 95</th></tr></thead>
           <tbody>
-            <tr><td class="age">40</td><td class="pct">3%</td><td><span class="meter"><i class="low" style="width:3%"></i></span></td><td>$582,492</td><td>$0</td></tr>
-            <tr><td class="age">50</td><td class="pct">56%</td><td><span class="meter"><i class="low" style="width:56%"></i></span></td><td>$1,373,084</td><td>$742,816</td></tr>
+            <tr><td class="age">40</td><td class="pct low">3%</td><td><span class="meter"><i class="low" style="width:3%"></i></span></td><td>$582,492</td><td>$0</td></tr>
+            <tr><td class="age">50</td><td class="pct low">56%</td><td><span class="meter"><i class="low" style="width:56%"></i></span></td><td>$1,373,084</td><td>$742,816</td></tr>
             <tr><td class="age">59</td><td class="pct">90%</td><td><span class="meter"><i style="width:90%"></i></span></td><td>$2,414,598</td><td>$5,558,280</td></tr>
           </tbody>
         </table>
       </div>
-      <p class="runlog-foot">Figures read from the app's result cards in the screenshots on this page. Each run draws fresh random numbers, so a rerun moves them by a point or so.</p>
-    </div>
-    <div class="panels">
-      <figure>
-        <img width="1556" height="1040" class="shot" src="result-fail.png" loading="lazy"
-          alt="Result card reading 3% chance of never running out, with a fan chart whose median portfolio line peaks at retirement age 40 and falls to zero by the early fifties." />
-        <figcaption>
-          Retire at 40: 3%. The median path reaches zero in the early fifties.
-        </figcaption>
-      </figure>
-      <figure>
-        <img width="1556" height="1096" class="shot" src="earliest.png" loading="lazy"
-          alt="Result card reading 90% and earliest age for 90% success: 59, with a fan chart whose bands keep rising through retirement." />
-        <figcaption>
-          Retire at 59: 90%, the age the search returned.
-        </figcaption>
-      </figure>
+      <p class="runlog-foot">Read from the app's result cards, captured as <a href="result-fail.png">result-fail.png</a>, <a href="result-card.png">result-card.png</a> and <a href="earliest.png">earliest.png</a>. 59 is the age the app's "earliest age for 90%" search returned.</p>
     </div>
     <p style="margin-top:26px">
-      Retiring at 50 is the case a rule of thumb gets wrong. The median portfolio
-      at 50 is $1.37 million against $60k of spending (a 4.4% withdrawal rate, close
-      enough to "4%" to look fine), and nearly half the simulated paths still run
-      dry before 95.
+      At 50 the median portfolio is $1.37 million against $60k of spending, a
+      4.4% withdrawal rate. That is close enough to "4%" to look fine, and
+      44% of the simulated paths still run dry before 95.
     </p>
   </section>
 
   <section class="stop">
     <p class="eyebrow">Why simulate</p>
-    <h2>Rules of thumb ignore the order of returns</h2>
+    <h2>The same returns in a different order end differently</h2>
     <p>
-      The 4% rule and "save 25 times your spending" both describe an average
-      future. A crash in the first few years of retirement does far more damage
-      than the same crash twenty years later, because you are selling assets to
-      live on while prices are down. Two paths with the same average return can
-      end in opposite places depending on when the bad years land.
+      The 4% rule and "save 25 times your spending" describe an average
+      future. A crash in the first years of retirement does far more damage
+      than the same crash twenty years later, because you are selling to live
+      while prices are down. The figure below makes that concrete with one of
+      the simulated paths.
     </p>
-    <p>
-      Drawing thousands of random sequences puts a number on that risk: the share
-      of the 5,000 paths that never touch zero before the plan-until age.
+
+    <figure class="calc" id="seq" style="margin-top:26px">
+      <div class="calc-head"><span>One simulated path, retire at 50</span><span>same returns, reversed</span></div>
+      <div class="calc-body">
+        <p class="calc-title" id="seq-title">Identical average return, opposite outcomes</p>
+        <p class="calc-sub" id="seq-sub">Finding a path in the age-50 run that fails, then replaying its retirement years in reverse order.</p>
+        <div class="plot wait" id="plot-q" aria-hidden="true"></div>
+        <div class="lg"><span class="l4">as drawn</span><span class="l3">same returns, reversed after 50</span></div>
+        <div class="seqstats" id="seq-stats"></div>
+      </div>
+      <figcaption class="calc-foot">The first failing path, in seed order, whose first ten retirement years ran below its own average and whose reversed sequence survives. Working years (32 to 50) are identical in both lines; only the 45 retirement-year returns are reversed, so their average is the same.</figcaption>
+    </figure>
+
+    <p style="margin-top:26px">
+      Thousands of random sequences put a number on that risk: the share of
+      5,000 paths that never touch zero before the plan-until age.
     </p>
   </section>
 
@@ -384,46 +428,40 @@
     <p class="eyebrow">Method</p>
     <h2>What happens in one run</h2>
     <p>
-      For each of 5,000 paths, the simulator starts from current savings and steps
-      forward a year at a time. Each year it draws a return from a normal
-      distribution with your chosen mean and standard deviation (a Box-Muller
-      transform on <code>Math.random</code>), applies it to the balance, then adds
-      the contribution if you are still working or subtracts spending if you have
-      retired. A balance that goes negative is set to zero and the path is marked
-      as failed.
+      For each of 5,000 paths the simulator starts from current savings and
+      steps forward a year at a time. Each year it draws a return from a
+      normal distribution with your mean and standard deviation (a Box-Muller
+      transform on <code>Math.random</code>), applies it to the balance, then
+      adds the contribution if you are still working or subtracts spending if
+      you have retired. A balance that goes negative is set to zero and the
+      path is marked as failed.
     </p>
     <p>
-      After the loop it sorts the 5,000 balances at every age and reads off the
-      10th, 25th, 50th, 75th and 90th percentiles for the chart. The earliest-age
-      search tries every retirement age from next year upward at 2,500 paths each,
-      stops at the first that reaches 90%, and reruns that age at 5,000 paths for
-      the card you see.
+      After the loop it sorts the 5,000 balances at every age and reads off
+      the 10th, 25th, 50th, 75th and 90th percentiles for the chart. The
+      earliest-age search tries every retirement age from next year upward at
+      2,500 paths each, stops at the first that reaches 90%, and reruns that
+      age at 5,000 paths for the card you see.
     </p>
-    <figure>
-      <img width="2880" height="1920" class="shot" src="app-result.png" loading="lazy"
-        alt="The full simulator page at desktop width, with the eight inputs on the left and the result card and fan chart on the right." />
-      <figcaption>The app at desktop width. The dark line is the median path; the shaded bands are the 25th to 75th and 10th to 90th percentiles.</figcaption>
-    </figure>
+    <div class="panels" style="grid-template-columns: minmax(0, 2.4fr) minmax(0, 1fr)">
+      <figure>
+        <img width="2880" height="1920" class="shot" src="app-result.png" loading="lazy"
+          alt="The simulator at desktop width: eight inputs in a column on the left, and on the right a 57% success rate above a fan chart whose bands widen after the dashed retirement line at 50." />
+        <figcaption>The app at 1380px, default plan.</figcaption>
+      </figure>
+      <figure>
+        <img width="1170" height="2532" class="shot" src="mobile.png" loading="lazy"
+          alt="The simulator on a 390 pixel wide phone, with the inputs stacked in one column above the result." />
+        <figcaption>At 390px the inputs stack above the result.</figcaption>
+      </figure>
+    </div>
     <dl class="specs">
       <div class="spec"><dt>Return draw</dt><dd>Normal, Box-Muller, mean and volatility set by the user (defaults 5.0% and 13.0% real)</dd></div>
       <div class="spec"><dt>Paths</dt><dd>5,000 per run; 2,500 per candidate age during the earliest-age search</dd></div>
       <div class="spec"><dt>Success</dt><dd>Share of paths whose balance stays above zero through the plan-until age</dd></div>
-      <div class="spec"><dt>Chart</dt><dd>Percentile bands drawn on a <code>&lt;canvas&gt;</code>, no charting library</dd></div>
+      <div class="spec"><dt>Chart</dt><dd>Percentile bands drawn on a <code>&lt;canvas&gt;</code>, no charting library; hover or arrow keys read any age</dd></div>
       <div class="spec"><dt>Stack</dt><dd>One HTML file of vanilla JavaScript; nothing to install, and no backend or analytics</dd></div>
     </dl>
-  </section>
-
-  <section class="stop">
-    <p class="eyebrow">On a phone</p>
-    <h2>One column at 390px</h2>
-    <p>
-      The inputs stack above the result card and the chart stays readable.
-    </p>
-    <figure>
-      <img width="1170" height="2532" class="shot shot--narrow" src="mobile.png" loading="lazy"
-        alt="The simulator on a 390 pixel wide phone screen, with inputs stacked in one column above the result card and fan chart." />
-      <figcaption>The simulator at 390px wide.</figcaption>
-    </figure>
   </section>
 
   <section class="stop stop--warn">
@@ -431,20 +469,20 @@
     <h2>What this model leaves out</h2>
     <p>
       Returns are independent draws from a normal distribution. Market returns
-      have fatter tails, and their bad years cluster in a way independent draws
-      can't reproduce, so the model is probably a little optimistic about the
-      worst outcomes.
+      have fatter tails, and their bad years cluster in a way independent
+      draws can't reproduce, so the model is probably a little optimistic
+      about the worst outcomes.
     </p>
     <p>
-      Return and spending are both constant in real terms. The model leaves out
-      taxes, pensions and Social Security, a glide path between stocks and bonds,
-      one-off costs, and cutting back in a bad year. The last is the biggest gap,
-      because people who have retired do adjust their spending, and that
+      Return and spending are both constant in real terms. The model leaves
+      out taxes, pensions and Social Security, a glide path between stocks and
+      bonds, one-off costs, and cutting back in a bad year. The last is the
+      biggest gap: people who have retired do adjust their spending, and that
       flexibility would raise the success rate.
     </p>
     <p>
-      Use it to compare plans against each other. It is an educational tool and
-      does not give financial advice.
+      Use it to compare plans against each other. It is an educational tool
+      and does not give financial advice.
     </p>
   </section>
 
@@ -454,8 +492,8 @@
     <p>
       The <a href="https://lyhjeremy.github.io/epub-reading-level-analyzer/">EPUB
       reading-level analyzer</a> is built the same way: one file, everything
-      client-side. The simulation function here is about 35 lines of JavaScript and
-      can be read in a sitting.
+      client-side. The simulation function here is about 35 lines of
+      JavaScript and can be read in a sitting.
     </p>
   </section>
 
@@ -481,5 +519,195 @@
     <p>An educational tool. Not financial advice.</p>
   </footer>
 </div>
+
+<script>
+(function () {
+  /* The default plan from the app's inputs (index.html). */
+  var BASE = { age: 32, balance: 150000, contrib: 40000, spend: 60000, until: 95, ret: 5, vol: 13, sims: 5000 };
+  var SEED = 2026, AGES = [];
+  for (var a = 35; a <= 70; a++) AGES.push(a);
+
+  /* Seeded uniform (mulberry32) feeding the app's Box-Muller draw. */
+  function rng(seed) {
+    return function () {
+      seed = seed + 0x6D2B79F5 | 0;
+      var t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+  function normal(r) {
+    var u = 0, v = 0; while (u === 0) u = r(); while (v === 0) v = r();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  /* Same loop as simulate() in index.html, with the seeded draw. */
+  function simulate(p, keep) {
+    var years = p.until - p.age, N = p.sims, r = rng(SEED), mu = p.ret / 100, sd = p.vol / 100;
+    var cols = keep ? Array.from({ length: years + 1 }, function () { return new Float64Array(N); }) : null;
+    var atRet = new Float64Array(N), atEnd = new Float64Array(N), success = 0, ry = Math.min(years, p.retire - p.age);
+    for (var s = 0; s < N; s++) {
+      var bal = p.balance, alive = true;
+      if (keep) cols[0][s] = bal;
+      for (var y = 1; y <= years; y++) {
+        var age = p.age + y;
+        bal = bal * (1 + mu + sd * normal(r));
+        if (age <= p.retire) bal += p.contrib; else bal -= p.spend;
+        if (bal < 0) { bal = 0; alive = false; }
+        if (keep) cols[y][s] = bal;
+        if (y === ry) atRet[s] = bal;
+      }
+      atEnd[s] = bal;
+      if (alive && bal > 0) success++;
+    }
+    var q = function (arr, f) { var a = Array.from(arr).sort(function (x, y) { return x - y; }); return a[Math.min(a.length - 1, Math.floor(f * (a.length - 1)))]; };
+    var out = { rate: success / N, medRet: q(atRet, .5), medEnd: q(atEnd, .5), years: years };
+    if (keep) ["p10", "p25", "p50", "p75", "p90"].forEach(function (k) {
+      var f = +k.slice(1) / 100; out[k] = cols.map(function (c) { return q(c, f); });
+    });
+    return out;
+  }
+
+  var money = function (v) { return v >= 1e6 ? "$" + (v / 1e6).toFixed(2) + "M" : "$" + Math.round(v / 1000) + "k"; };
+  var full = function (v) { return "$" + Math.round(v).toLocaleString("en-US"); };
+  var res = {}, sel = 50, fanCache = {};
+  var plotS = document.getElementById("plot-s"), plotF = document.getElementById("plot-f");
+  var slider = document.getElementById("age-in"), out = document.getElementById("age-out"), read = document.getElementById("read");
+
+  function drawCurve() {
+    var W = Math.max(260, plotS.clientWidth), H = Math.round(Math.min(300, Math.max(210, W * 0.62)));
+    var L = 40, R = 12, T = 12, B = 44;
+    var X = function (a) { return L + (a - 35) / 35 * (W - L - R); }, Y = function (v) { return T + (1 - v) * (H - T - B); };
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Success rate by retirement age">';
+    [0, .25, .5, .75, 1].forEach(function (v) {
+      s += '<line class="ax" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text class="ax-t" x="' + (L - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + v * 100 + '%</text>';
+    });
+    [35, 40, 45, 50, 55, 60, 65, 70].forEach(function (a) { s += '<text class="ax-t" x="' + X(a) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + a + '</text>'; });
+    s += '<line class="ref" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(.9) + '" y2="' + Y(.9) + '"/><text class="ref-t" x="' + (L + 4) + '" y="' + (Y(.9) - 5) + '">90%</text>';
+    var pts = AGES.filter(function (a) { return res[a]; });
+    if (pts.length) s += '<polyline class="ln-s" points="' + pts.map(function (a) { return X(a).toFixed(1) + "," + Y(res[a].rate).toFixed(1); }).join(" ") + '"/>';
+    if (res[sel]) {
+      s += '<line class="cur" x1="' + X(sel) + '" x2="' + X(sel) + '" y1="' + T + '" y2="' + (H - B) + '"/>' +
+           '<circle class="cur-d" cx="' + X(sel) + '" cy="' + Y(res[sel].rate) + '" r="5"/>' +
+           '<text class="lab" x="' + (X(sel) + (sel > 60 ? -8 : 8)) + '" y="' + (Math.max(T + 12, Y(res[sel].rate) - 8)) + '" text-anchor="' + (sel > 60 ? "end" : "start") + '">' + Math.round(res[sel].rate * 100) + '%</text>';
+    }
+    s += '<text class="ax-l" x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end">retirement age</text></svg>';
+    plotS.innerHTML = s;
+    var svg = plotS.querySelector("svg");
+    svg.addEventListener("pointermove", function (e) {
+      var r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width;
+      var a = Math.round(35 + (x - L) / (W - L - R) * 35);
+      if (a >= 35 && a <= 70 && a !== sel) setAge(a);
+    });
+  }
+
+  function drawFan() {
+    var W = Math.max(260, plotF.clientWidth), H = Math.round(Math.min(300, Math.max(210, W * 0.62)));
+    var L = 50, R = 12, T = 12, B = 44;
+    var f = fanCache[sel] || (fanCache[sel] = simulate(Object.assign({}, BASE, { retire: sel }), true));
+    var max = Math.max.apply(null, f.p90) * 1.04;
+    var X = function (g) { return L + g / f.years * (W - L - R); }, Y = function (v) { return T + (1 - v / max) * (H - T - B); };
+    var path = function (arr) { return arr.map(function (v, g) { return X(g).toFixed(1) + "," + Y(v).toFixed(1); }).join(" "); };
+    var band = function (lo, hi) { return path(hi) + " " + lo.map(function (v, g) { return [g, v]; }).reverse().map(function (gv) { return X(gv[0]).toFixed(1) + "," + Y(gv[1]).toFixed(1); }).join(" "); };
+    var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Fan chart of portfolio value by age">';
+    for (var i = 0; i <= 4; i++) { var v = max * i / 4; s += '<line class="ax" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text class="ax-t" x="' + (L - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + (i ? money(v) : "$0") + '</text>'; }
+    [32, 45, 60, 75, 95].forEach(function (a) { s += '<text class="ax-t" x="' + X(a - 32) + '" y="' + (H - B + 16) + '" text-anchor="middle">' + a + '</text>'; });
+    s += '<polygon class="b1" points="' + band(f.p10, f.p90) + '"/><polygon class="b2" points="' + band(f.p25, f.p75) + '"/>';
+    s += '<polyline class="md" points="' + path(f.p50) + '"/>';
+    s += '<line class="zero" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(0) + '" y2="' + Y(0) + '"/>';
+    var rx = X(sel - 32);
+    s += '<line class="rmk" x1="' + rx + '" x2="' + rx + '" y1="' + T + '" y2="' + (H - B) + '"/><text class="lab" x="' + (rx + (sel > 75 ? -5 : 5)) + '" y="' + (T + 11) + '" text-anchor="' + (sel > 75 ? "end" : "start") + '">retire ' + sel + '</text>';
+    s += '<text class="ax-l" x="' + (W - R) + '" y="' + (H - 4) + '" text-anchor="end">age</text></svg>';
+    plotF.innerHTML = s;
+  }
+
+  function readout() {
+    var r = res[sel]; if (!r) return;
+    var pct = Math.round(r.rate * 100);
+    read.innerHTML = "Retire at " + sel + ": " + (pct >= 90 ? "<b>" + pct + "%</b>" : "<em>" + pct + "%</em>") +
+      " of 5,000 paths last to 95. Median portfolio " + full(r.medRet) + " at retirement, " + full(r.medEnd) + " at 95.";
+  }
+  function setAge(a) {
+    sel = a; slider.value = a; out.textContent = a;
+    drawCurve(); drawFan(); readout();
+  }
+  slider.addEventListener("input", function () { setAge(+slider.value); });
+
+  /* Compute one age per tick so the page stays responsive; the curve fills in as it goes. */
+  var i = 0;
+  function step() {
+    var t0 = performance.now();
+    while (i < AGES.length && performance.now() - t0 < 40) {
+      var a = AGES[i++]; res[a] = simulate(Object.assign({}, BASE, { retire: a }), false);
+    }
+    drawCurve();
+    if (i < AGES.length) { setTimeout(step, 0); return; }
+    plotS.classList.remove("wait"); plotF.classList.remove("wait");
+    var first90 = AGES.filter(function (a) { return res[a].rate >= 0.9; })[0];
+    document.getElementById("curve-title").textContent = "Same plan, only the retirement age moves: " +
+      Math.round(res[40].rate * 100) + "% at 40, " + Math.round(res[50].rate * 100) + "% at 50, 90% first at " + first90;
+    setAge(sel);
+    sequence();
+  }
+  setTimeout(step, 30);
+
+  /* Sequence demo: first failing path at retire 50 whose reversed retirement returns survive. */
+  function sequence() {
+    var p = Object.assign({}, BASE, { retire: 50 }), years = p.until - p.age, ry = p.retire - p.age;
+    var r = rng(SEED), mu = p.ret / 100, sd = p.vol / 100;
+    var run = function (rets) {
+      var bal = p.balance, line = [bal], dead = null;
+      for (var y = 1; y <= years; y++) {
+        bal = bal * (1 + rets[y - 1]);
+        if (p.age + y <= p.retire) bal += p.contrib; else bal -= p.spend;
+        if (bal < 0) { bal = 0; if (dead === null) dead = p.age + y; }
+        line.push(bal);
+      }
+      return { line: line, dead: dead, end: bal };
+    };
+    for (var s = 0; s < p.sims; s++) {
+      var rets = []; for (var y = 0; y < years; y++) rets.push(mu + sd * normal(r));
+      var a = run(rets);
+      if (a.dead === null) continue;
+      var rev = rets.slice(0, ry).concat(rets.slice(ry).reverse()), b = run(rev);
+      if (b.dead !== null) continue;
+      var rr = rets.slice(ry), m10 = 0, mAll = 0;
+      for (var k = 0; k < rr.length; k++) { mAll += rr[k] / rr.length; if (k < 10) m10 += rr[k] / 10; }
+      if (m10 >= mAll) continue;
+      return drawSeq(a, b, rets.slice(ry), rev.slice(ry), s + 1);
+    }
+  }
+  function drawSeq(a, b, ra, rb, n) {
+    var box = document.getElementById("plot-q");
+    var avg = function (x, k) { var t = 0; for (var i = 0; i < k; i++) t += x[i]; return t / k; };
+    function paint() {
+      var W = Math.max(260, box.clientWidth), H = Math.round(Math.min(280, Math.max(200, W * 0.4)));
+      var L = 50, R = 12, T = 12, B = 28, years = a.line.length - 1;
+      var max = Math.max(Math.max.apply(null, a.line), Math.max.apply(null, b.line)) * 1.05;
+      var X = function (g) { return L + g / years * (W - L - R); }, Y = function (v) { return T + (1 - v / max) * (H - T - B); };
+      var path = function (arr) { return arr.map(function (v, g) { return X(g).toFixed(1) + "," + Y(v).toFixed(1); }).join(" "); };
+      var s = '<svg viewBox="0 0 ' + W + " " + H + '" width="' + W + '" height="' + H + '" role="img" aria-label="Two portfolio paths with the same returns in different order">';
+      for (var i = 0; i <= 4; i++) { var v = max * i / 4; s += '<line class="ax" x1="' + L + '" x2="' + (W - R) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text class="ax-t" x="' + (L - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + (i ? money(v) : "$0") + '</text>'; }
+      [32, 50, 65, 80, 95].forEach(function (g) { s += '<text class="ax-t" x="' + X(g - 32) + '" y="' + (H - 8) + '" text-anchor="middle">' + g + '</text>'; });
+      s += '<line class="rmk" x1="' + X(18) + '" x2="' + X(18) + '" y1="' + T + '" y2="' + (H - B) + '"/>';
+      s += '<polyline class="p-good" points="' + path(b.line) + '"/><polyline class="p-bad" points="' + path(a.line) + '"/>';
+      s += '</svg>';
+      box.innerHTML = s; box.classList.remove("wait");
+    }
+    paint();
+    var lastW = box.clientWidth;
+    window.addEventListener("resize", function () { if (box.clientWidth !== lastW) { lastW = box.clientWidth; paint(); } });
+    document.getElementById("seq-title").textContent = "Same 45 returns: run out at " + a.dead + ", or end with " + money(b.end);
+    document.getElementById("seq-sub").textContent = "Path " + n + " of the age-50 run, as drawn and with its retirement years reversed.";
+    var pc = function (x) { return (x * 100).toFixed(1) + "%"; };
+    document.getElementById("seq-stats").innerHTML =
+      '<div>Average real return, ages 51 to 95<b>' + pc(avg(ra, ra.length)) + '</b>in both</div>' +
+      '<div>First 10 years of retirement, as drawn<b class="bad">' + pc(avg(ra, 10)) + ' a year</b>out of money at ' + a.dead + '</div>' +
+      '<div>First 10 years, reversed<b class="good">' + pc(avg(rb, 10)) + ' a year</b>' + full(b.end) + ' at 95</div>';
+  }
+
+  var lw = plotS.clientWidth;
+  window.addEventListener("resize", function () { if (plotS.clientWidth !== lw && res[sel]) { lw = plotS.clientWidth; drawCurve(); drawFan(); } });
+})();
+</script>
 </body>
 </html>

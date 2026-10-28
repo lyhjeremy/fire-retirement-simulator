@@ -6,7 +6,7 @@ A browser-based retirement simulator that runs 5,000 randomized market paths and
 
 Design and copy follow [these standards](https://github.com/lyhjeremy/lyhjeremy/blob/main/DESIGN_STANDARDS.md).
 
-![Result card reading 56% chance of never running out by age 95, above a fan chart whose percentile bands widen after retirement at 50](overview/result-card.png)
+![The simulator with the default plan: eight inputs on the left, and a 57% chance of the money lasting to 95 above a fan chart whose bands widen after retirement at 50](overview/app-result.png)
 
 ## What the default plan shows
 
@@ -18,7 +18,7 @@ I ran the app's default plan (age 32, $150k saved, $40k a year contributed, $60k
 | 50 | 56% | $1,373,084 | $742,816 |
 | 59 | 90% | $2,414,598 | $5,558,280 |
 
-The built-in "Find earliest age for 90% success" search returned 59. The middle row is the interesting one: retiring at 50 means withdrawing about 4.4% of the median portfolio, which is close enough to the 4% rule to look safe, and yet 44% of paths run out before 95. Every run uses fresh random draws, so a rerun moves these figures slightly.
+The built-in "Find earliest age for 90% success" search returned 59. The [write-up](https://lyhjeremy.github.io/fire-retirement-simulator/overview/) runs the same code for every retirement age from 35 to 70 and has a slider to compare them. The middle row is the interesting one: retiring at 50 means withdrawing about 4.4% of the median portfolio, which is close enough to the 4% rule to look safe, and yet 44% of paths run out before 95. Every run uses fresh random draws, so a rerun moves these figures slightly.
 
 ## How a run works
 
@@ -26,7 +26,7 @@ Each of the 5,000 paths starts from current savings and steps forward one year a
 
 The earliest-age search tries each retirement age in turn at 2,500 paths, stops at the first one that reaches 90%, and reruns that age at 5,000 paths for the card you see.
 
-The whole thing is one HTML file of vanilla JavaScript with a `<canvas>` chart. It has no dependencies, build step, backend or analytics, and nothing you type leaves the browser. To run it, open `index.html` in a browser or use the [live app](https://lyhjeremy.github.io/fire-retirement-simulator/).
+The whole thing is one HTML file of vanilla JavaScript with a `<canvas>` chart; hover it, or focus it and use the arrow keys, to read the percentiles at any age. It has no dependencies, build step, backend or analytics, and nothing you type leaves the browser. To run it, open `index.html` in a browser or use the [live app](https://lyhjeremy.github.io/fire-retirement-simulator/).
 
 ## What it leaves out
 
