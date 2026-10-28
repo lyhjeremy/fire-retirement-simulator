@@ -322,9 +322,9 @@
     <p class="eyebrow">Test log</p>
     <h2>One plan, three retirement ages</h2>
     <p>
-      To show what the simulator is for, I ran the default plan three times and
-      moved only the retirement age. Savings, contributions, spending, the 5.0%
-      real return and the 13.0% volatility stayed fixed.
+      I ran the default plan three times and moved only the retirement age;
+      savings, contributions, spending, the 5.0% real return and the 13.0%
+      volatility stayed where they were.
     </p>
     <div class="runlog">
       <div class="runlog-head"><span>Default plan, plan until 95</span><span>5,000 paths each</span></div>
@@ -357,10 +357,10 @@
       </figure>
     </div>
     <p style="margin-top:26px">
-      The 50-year-old plan at 56% is the one a rule of thumb gets wrong. At 50 the
-      median portfolio is $1.37 million against $60k of spending, a 4.4% withdrawal
-      rate, close enough to "4%" to look fine. Nearly half the simulated paths still
-      run dry before 95.
+      Retiring at 50 is the case a rule of thumb gets wrong. The median portfolio
+      at 50 is $1.37 million against $60k of spending (a 4.4% withdrawal rate, close
+      enough to "4%" to look fine), and nearly half the simulated paths still run
+      dry before 95.
     </p>
   </section>
 
@@ -375,9 +375,8 @@
       end in opposite places depending on when the bad years land.
     </p>
     <p>
-      Drawing thousands of random sequences puts a number on that risk. The
-      success rate is the share of the 5,000 paths that never touch zero before
-      the plan-until age.
+      Drawing thousands of random sequences puts a number on that risk: the share
+      of the 5,000 paths that never touch zero before the plan-until age.
     </p>
   </section>
 
@@ -396,9 +395,9 @@
     <p>
       After the loop it sorts the 5,000 balances at every age and reads off the
       10th, 25th, 50th, 75th and 90th percentiles for the chart. The earliest-age
-      search tries every retirement age from next year upward, 2,500 paths each,
-      and stops at the first that reaches 90%. It then reruns that age at 5,000
-      paths for the card you see.
+      search tries every retirement age from next year upward at 2,500 paths each,
+      stops at the first that reaches 90%, and reruns that age at 5,000 paths for
+      the card you see.
     </p>
     <figure>
       <img width="2880" height="1920" class="shot" src="app-result.png" loading="lazy"
@@ -410,7 +409,7 @@
       <div class="spec"><dt>Paths</dt><dd>5,000 per run; 2,500 per candidate age during the earliest-age search</dd></div>
       <div class="spec"><dt>Success</dt><dd>Share of paths whose balance stays above zero through the plan-until age</dd></div>
       <div class="spec"><dt>Chart</dt><dd>Percentile bands drawn on a <code>&lt;canvas&gt;</code>, no charting library</dd></div>
-      <div class="spec"><dt>Stack</dt><dd>One HTML file, vanilla JavaScript, no dependencies, no backend, no analytics</dd></div>
+      <div class="spec"><dt>Stack</dt><dd>One HTML file of vanilla JavaScript; nothing to install, and no backend or analytics</dd></div>
     </dl>
   </section>
 
@@ -431,21 +430,21 @@
     <p class="eyebrow">Limitations</p>
     <h2>What this model leaves out</h2>
     <p>
-      Returns are independent draws from a normal distribution. Real market
-      returns have fatter tails and bad years that cluster, which independent
-      normal draws do not reproduce, so the model is probably a little optimistic
-      about the worst outcomes.
+      Returns are independent draws from a normal distribution. Market returns
+      have fatter tails, and their bad years cluster in a way independent draws
+      can't reproduce, so the model is probably a little optimistic about the
+      worst outcomes.
     </p>
     <p>
-      Return and spending are both constant in real terms. There are no taxes, no
-      pension or Social Security, no glide path between stocks and bonds, no
-      one-off costs, and no cutting back in a bad year. That last one is the
-      biggest gap: real retirees adjust their spending, and that flexibility would
-      raise the success rate.
+      Return and spending are both constant in real terms. The model leaves out
+      taxes, pensions and Social Security, a glide path between stocks and bonds,
+      one-off costs, and cutting back in a bad year. The last is the biggest gap,
+      because people who have retired do adjust their spending, and that
+      flexibility would raise the success rate.
     </p>
     <p>
-      Use it to compare plans against each other. It is an educational tool, not
-      financial advice.
+      Use it to compare plans against each other. It is an educational tool and
+      does not give financial advice.
     </p>
   </section>
 
