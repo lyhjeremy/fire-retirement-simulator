@@ -1,0 +1,339 @@
+{
+ "data": "1871-2022 (Shiller file ends 2023-09)",
+ "benchmark_4pct_30y": {
+  "50_stocks": {
+   "trinity_published": 0.95,
+   "trinity_window": {
+    "rate": 0.9268,
+    "n": 41,
+    "failed": [
+     1964,
+     1965,
+     1966
+    ]
+   },
+   "all_windows": {
+    "rate": 0.9512,
+    "n": 123,
+    "failed": [
+     1964,
+     1965,
+     1966,
+     1967,
+     1968,
+     1969
+    ]
+   },
+   "safemax_1926_1966": 3.63,
+   "safemax_all": 3.63
+  },
+  "75_stocks": {
+   "trinity_published": 0.98,
+   "trinity_window": {
+    "rate": 0.9512,
+    "n": 41,
+    "failed": [
+     1965,
+     1966
+    ]
+   },
+   "all_windows": {
+    "rate": 0.9675,
+    "n": 123,
+    "failed": [
+     1965,
+     1966,
+     1968,
+     1969
+    ]
+   },
+   "safemax_1926_1966": 3.75,
+   "safemax_all": 3.75
+  },
+  "100_stocks": {
+   "trinity_published": null,
+   "trinity_window": {
+    "rate": 0.9512,
+    "n": 41,
+    "failed": [
+     1929,
+     1966
+    ]
+   },
+   "all_windows": {
+    "rate": 0.9756,
+    "n": 123,
+    "failed": [
+     1929,
+     1966,
+     1969
+    ]
+   },
+   "safemax_1926_1966": 3.79,
+   "safemax_all": 3.79
+  }
+ },
+ "benchmark_damodaran_data": {
+  "50_stocks": {
+   "rate_1928_1966": 0.9231,
+   "n": 39,
+   "failed": [
+    1964,
+    1965,
+    1966
+   ]
+  },
+  "75_stocks": {
+   "rate_1928_1966": 0.9487,
+   "n": 39,
+   "failed": [
+    1965,
+    1966
+   ]
+  },
+  "100_stocks": {
+   "rate_1928_1966": 0.9231,
+   "n": 39,
+   "failed": [
+    1929,
+    1930,
+    1966
+   ]
+  }
+ },
+ "fail_ages_75_stocks": {
+  "1965": 94,
+  "1966": 91,
+  "1968": 95,
+  "1969": 94
+ },
+ "benchmark_note": "Trinity (1998) used S&P 500 and long-term high-grade corporate bonds, 1926-1995; Bengen (1994) used S&P 500 and intermediate Treasuries and found 4.15% the worst-case rate at 50-75% stocks. Here: Shiller S&P Composite and 10-year Treasuries, January to January.",
+ "holdout_1946_1993": {
+  "note": "75/25, 30 years, constant real withdrawals; random modes fitted on 1871-1945 only; realized = share of 1946-1993 retirement years that lasted 30 years. Windows overlap, so 48 windows are worth only a few independent observations.",
+  "rows": [
+   {
+    "rate": 3.0,
+    "realized": 1.0,
+    "n": 48,
+    "bootstrap": 0.9962,
+    "normal": 0.9812
+   },
+   {
+    "rate": 3.5,
+    "realized": 1.0,
+    "n": 48,
+    "bootstrap": 0.987,
+    "normal": 0.962
+   },
+   {
+    "rate": 4.0,
+    "realized": 0.9167,
+    "n": 48,
+    "bootstrap": 0.9637,
+    "normal": 0.9263
+   },
+   {
+    "rate": 4.5,
+    "realized": 0.8125,
+    "n": 48,
+    "bootstrap": 0.9295,
+    "normal": 0.8808
+   },
+   {
+    "rate": 5.0,
+    "realized": 0.7292,
+    "n": 48,
+    "bootstrap": 0.8778,
+    "normal": 0.811
+   },
+   {
+    "rate": 5.5,
+    "realized": 0.6458,
+    "n": 48,
+    "bootstrap": 0.8057,
+    "normal": 0.7392
+   },
+   {
+    "rate": 6.0,
+    "realized": 0.625,
+    "n": 48,
+    "bootstrap": 0.726,
+    "normal": 0.6613
+   }
+  ]
+ },
+ "cases": {
+  "default_historical": {
+   "rate": 0.9333,
+   "n": 90,
+   "medEnd": 6707529,
+   "failed": [
+    1917,
+    1973,
+    1974,
+    1975,
+    1976,
+    1977
+   ],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "default_bootstrap": {
+   "rate": 0.848,
+   "n": 5000,
+   "medEnd": 9306298
+  },
+  "default_normal": {
+   "rate": 0.8224,
+   "n": 5000,
+   "medEnd": 9044391
+  },
+  "default_normal_old_assumption": {
+   "rate": 0.5432,
+   "n": 5000,
+   "medEnd": 449891
+  },
+  "retire50_100pct_stocks_historical": {
+   "rate": 1.0,
+   "n": 90,
+   "medEnd": 15040913,
+   "failed": [],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "glide_90_to_50_historical": {
+   "rate": 0.7667,
+   "n": 90,
+   "medEnd": 1844378,
+   "failed": [
+    1908,
+    1910,
+    1911,
+    1912,
+    1913,
+    1914,
+    1915,
+    1916,
+    1917,
+    1918,
+    1919,
+    1920,
+    1946,
+    1947,
+    1948,
+    1973,
+    1974,
+    1975,
+    1976,
+    1977,
+    1978
+   ],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "percent_rule_4pct_historical": {
+   "rate": 1.0,
+   "n": 90,
+   "medEnd": 4105467,
+   "failed": [],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "guardrails_historical": {
+   "rate": 1.0,
+   "n": 90,
+   "medEnd": 4819039,
+   "failed": [],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "guardrails_bootstrap": {
+   "rate": 0.9,
+   "n": 5000,
+   "medEnd": 7226196
+  },
+  "pension_20k_at_67_historical": {
+   "rate": 1.0,
+   "n": 90,
+   "medEnd": 7807790,
+   "failed": [],
+   "incomplete": [
+    1979,
+    2022
+   ]
+  },
+  "pension_20k_at_67_bootstrap": {
+   "rate": 0.8992,
+   "n": 5000,
+   "medEnd": 10947141
+  },
+  "block1_bootstrap": {
+   "rate": 0.8256,
+   "n": 5000,
+   "medEnd": 9100060
+  },
+  "block5_bootstrap": {
+   "rate": 0.8434,
+   "n": 5000,
+   "medEnd": 9068020
+  },
+  "block20_bootstrap": {
+   "rate": 0.8636,
+   "n": 5000,
+   "medEnd": 10001429
+  },
+  "trinity_50_historical": {
+   "rate": 0.9512,
+   "n": 123,
+   "medEnd": 928252,
+   "failed": [
+    1964,
+    1965,
+    1966,
+    1967,
+    1968,
+    1969
+   ],
+   "incomplete": [
+    1994,
+    2022
+   ]
+  },
+  "trinity_75_historical": {
+   "rate": 0.9675,
+   "n": 123,
+   "medEnd": 1889332,
+   "failed": [
+    1965,
+    1966,
+    1968,
+    1969
+   ],
+   "incomplete": [
+    1994,
+    2022
+   ]
+  },
+  "trinity_75_bootstrap": {
+   "rate": 0.9284,
+   "n": 5000,
+   "medEnd": 2413214
+  },
+  "trinity_75_normal": {
+   "rate": 0.932,
+   "n": 5000,
+   "medEnd": 2306546
+  }
+ },
+ "js_matches_python": true
+}

@@ -1,0 +1,133 @@
+{
+ "note": "Damodaran histretSP.xls 'Nominal vs Real Data', calendar years from Dec 31 closes; ours run January to January on monthly averages, so single years differ by timing.",
+ "years": "1928-2022",
+ "sample": [
+  {
+   "year": 1931,
+   "ours_stock": -0.37953,
+   "dam_stock": -0.38067,
+   "ours_bond": 0.1205,
+   "dam_bond": 0.07452,
+   "ours_infl": -0.10063,
+   "dam_infl": -0.09317
+  },
+  {
+   "year": 1937,
+   "ours_stock": -0.32584,
+   "dam_stock": -0.37133,
+   "ours_bond": 0.02904,
+   "dam_bond": -0.01437,
+   "ours_infl": 0.00709,
+   "dam_infl": 0.02857
+  },
+  {
+   "year": 1966,
+   "ours_stock": -0.09544,
+   "dam_stock": -0.12897,
+   "ours_bond": 0.01322,
+   "dam_bond": -0.00437,
+   "ours_infl": 0.03459,
+   "dam_infl": 0.03359
+  },
+  {
+   "year": 1974,
+   "ours_stock": -0.29407,
+   "dam_stock": -0.33897,
+   "ours_bond": -0.07214,
+   "dam_bond": -0.09016,
+   "ours_infl": 0.11803,
+   "dam_infl": 0.12095
+  },
+  {
+   "year": 1987,
+   "ours_stock": -0.06189,
+   "dam_stock": 0.01419,
+   "ours_bond": -0.06371,
+   "dam_bond": -0.08907,
+   "ours_infl": 0.04047,
+   "dam_infl": 0.04332
+  },
+  {
+   "year": 2000,
+   "ours_stock": -0.08621,
+   "dam_stock": -0.12054,
+   "ours_bond": 0.13028,
+   "dam_bond": 0.1278,
+   "ours_infl": 0.03732,
+   "dam_infl": 0.03436
+  },
+  {
+   "year": 2008,
+   "ours_stock": -0.35648,
+   "dam_stock": -0.36538,
+   "ours_bond": 0.13421,
+   "dam_bond": 0.20128,
+   "ours_infl": 0.0003,
+   "dam_infl": -0.00022
+  },
+  {
+   "year": 2022,
+   "ours_stock": -0.17321,
+   "dam_stock": -0.23,
+   "ours_bond": -0.17007,
+   "dam_bond": -0.22803,
+   "ours_infl": 0.0641,
+   "dam_infl": 0.06445
+  }
+ ],
+ "aggregate": {
+  "stock": {
+   "ours": {
+    "mean": 0.08327964965598351,
+    "sd": 0.1911152208467634,
+    "geo": 0.06566578626528718,
+    "n": 95
+   },
+   "damodaran": {
+    "mean": 0.08258128947978353,
+    "sd": 0.1947547299886778,
+    "geo": 0.06396197932385372,
+    "n": 95
+   },
+   "corr": 0.9706467886025659,
+   "mean_abs_diff": 0.0357774518994879
+  },
+  "bond": {
+   "ours": {
+    "mean": 0.0188232455975317,
+    "sd": 0.08376876732678758,
+    "geo": 0.015483570469833063,
+    "n": 95
+   },
+   "damodaran": {
+    "mean": 0.01871841976375368,
+    "sd": 0.08955561747258874,
+    "geo": 0.014847919413613742,
+    "n": 95
+   },
+   "corr": 0.9668953531683452,
+   "mean_abs_diff": 0.01766846975493932
+  },
+  "infl": {
+   "ours": {
+    "mean": 0.03123304482725825,
+    "sd": 0.04026057830069904,
+    "geo": 0.030457847382033165,
+    "n": 95
+   },
+   "damodaran": {
+    "mean": 0.031190981052631576,
+    "sd": 0.03944426110186345,
+    "geo": 0.030446683948627706,
+    "n": 95
+   },
+   "corr": 0.9864906837811391,
+   "mean_abs_diff": 0.00450422362928608
+  },
+  "bond_vs_shiller_monthly": {
+   "n": 152,
+   "corr": 0.9990659227681402,
+   "mean_abs_diff": 0.0033862631352403303
+  }
+ }
+}

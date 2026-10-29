@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>When can I retire? A FIRE Monte Carlo simulator</title>
-<meta name="description" content="A free retirement simulator that runs 5,000 randomized market paths to estimate the chance your money lasts, and the earliest age you can retire with 90% odds. Runs entirely in your browser." />
+<title>When can I retire? A FIRE simulator on 152 years of market history</title>
+<meta name="description" content="A free retirement simulator built on Robert Shiller's US stock and bond returns from 1871 to 2022. Replay every historical retirement year, bootstrap thousands of paths, set a stock/bond mix, spending guardrails and a pension, and find the smallest change that gets a plan to 90%. Runs entirely in your browser." />
 <style>
   /* Ledger family: workshop (tokens from _ai-projects-tooling/ledger/families/tokens/workshop.css) */
   @font-face{font-family:"IBM Plex Sans Condensed";src:url("fonts/IBMPlexSansCondensed-600.woff2")format("woff2");font-weight:600;font-style:normal;font-display:swap}
@@ -33,7 +33,7 @@
   a { color: var(--signal); }
   a:hover { color: var(--ink); }
   :focus-visible { outline: 2px solid var(--signal); outline-offset: 3px; }
-  .wrap { width: min(100% - 2rem, 72rem); margin: 0 auto; }
+  .wrap { width: min(100% - 2rem, 76rem); margin: 0 auto; }
 
   .masthead { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 6px 16px;
               border: 1px solid var(--edge); padding: 10px 14px; margin-top: 18px; }
@@ -43,48 +43,116 @@
 
   header.intro { padding: 34px 0 26px; }
   .kicker { font: 600 13px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--signal); margin: 0 0 10px; }
-  h1 { font: 600 clamp(34px, 5.2vw, 58px)/1.02 var(--font-display); letter-spacing: -.02em; margin: 0; max-width: 20ch; }
-  .lede { font-family: var(--font-head); font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 62ch; margin: 16px 0 0; }
+  h1 { font: 600 clamp(32px, 5vw, 56px)/1.03 var(--font-display); letter-spacing: -.02em; margin: 0; max-width: 22ch; }
+  .lede { font-family: var(--font-head); font-size: 19px; line-height: 1.6; color: var(--ink-2); max-width: 64ch; margin: 16px 0 0; }
 
-  .app { display: grid; grid-template-columns: minmax(0, 22rem) minmax(0, 1fr); border: 1px solid var(--edge); background: var(--panel); }
-  @media (max-width: 860px) { .app { grid-template-columns: 1fr; } }
-  .inputs { padding: 18px 20px 22px; border-right: 1px solid var(--edge); }
-  @media (max-width: 860px) { .inputs { border-right: 0; border-bottom: 1px solid var(--edge); } }
+  .app { display: grid; grid-template-columns: minmax(0, 21rem) minmax(0, 1fr); border: 1px solid var(--edge); background: var(--panel); }
+  @media (max-width: 900px) { .app { grid-template-columns: 1fr; } }
+  .inputs { padding: 16px 20px 22px; border-right: 1px solid var(--edge); }
+  @media (max-width: 900px) { .inputs { border-right: 0; border-bottom: 1px solid var(--edge); } }
   .sec { font: 600 11.5px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2);
-         margin: 0 0 6px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); }
-  .field { display: grid; grid-template-columns: minmax(0, 1fr) 8.6rem; align-items: center; gap: 4px 12px;
-           padding: 9px 0; border-bottom: 1px dotted var(--rule); }
+         margin: 18px 0 2px; padding-bottom: 8px; border-bottom: 1px solid var(--rule); display: flex; justify-content: space-between; gap: 8px; }
+  .sec:first-child { margin-top: 0; }
+  .sec .n { color: var(--signal); }
+  .field { display: grid; grid-template-columns: minmax(0, 1fr) 7.8rem; align-items: center; gap: 4px 12px;
+           padding: 8px 0; border-bottom: 1px dotted var(--rule); }
+  .field[hidden] { display: none; }
   .field label { font-size: 14px; color: var(--ink); }
   .field .hint { display: block; font-size: 12px; color: var(--ink-2); }
-  .field input[type=number] { font: 600 15px var(--font-mono); text-align: right; width: 100%; padding: 7px 9px;
+  .field input[type=number], .field select { font: 600 15px var(--font-mono); text-align: right; width: 100%; padding: 6px 8px;
                               color: var(--ink); background: var(--paper); border: 1px solid var(--edge); }
+  .field select { text-align: left; font: 600 14px var(--font-body); }
+  .field.wide { grid-template-columns: 1fr; }
   .field.slider { grid-template-columns: minmax(0, 1fr) 4.4rem; }
   .field.slider input[type=range] { grid-column: 1 / -1; width: 100%; accent-color: var(--signal); margin: 2px 0 0; }
-  .field .val { font: 600 15px var(--font-mono); text-align: right; font-variant-numeric: tabular-nums; }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
-  button { font: 600 15px/1 var(--font-body); padding: 13px 18px; cursor: pointer; border: 1px solid var(--ink); }
-  #run { background: var(--ink); color: var(--paper); }
-  #run:hover { background: var(--signal); border-color: var(--signal); }
-  #earliest { background: transparent; color: var(--ink); }
-  #earliest:hover { border-color: var(--signal); color: var(--signal); }
+  .field .val { font: 600 15px var(--font-mono); text-align: right; }
+  .field.check { grid-template-columns: auto minmax(0, 1fr); }
+  .field.check input { width: 18px; height: 18px; accent-color: var(--signal); margin: 0; }
+  .field input.err { border: 2px solid var(--signal-2); }
 
-  .out { padding: 18px 20px 20px; min-width: 0; }
-  .verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 20px; align-items: center; padding-bottom: 16px; border-bottom: 1px solid var(--rule); }
-  .gauge { font: 600 clamp(52px, 7vw, 76px)/0.95 var(--font-mono); letter-spacing: -.04em; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  .out { padding: 16px 20px 20px; min-width: 0; }
+  .modes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); border: 1px solid var(--edge); }
+  .modes label { position: relative; display: block; padding: 9px 10px; cursor: pointer; font: 600 14px/1.25 var(--font-body);
+                 color: var(--ink); border-right: 1px solid var(--edge); background: var(--paper); }
+  .modes label:last-child { border-right: 0; }
+  .modes label span { display: block; font: 11.5px/1.3 var(--font-mono); color: var(--ink-2); font-weight: 400; margin-top: 2px; }
+  .modes input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .modes label:has(input:checked) { background: var(--ink); color: var(--paper); }
+  .modes label:has(input:checked) span { color: var(--paper); }
+  .modes label:has(input:focus-visible) { outline: 2px solid var(--signal); outline-offset: -4px; }
+  @media (max-width: 520px) { .modes label span { display: none; } .modes label { font-size: 13px; padding: 9px 6px; } }
+  .modeline { font: 13.5px/1.5 var(--font-body); color: var(--ink-2); margin: 8px 0 14px; min-height: 2.9em; }
+
+  .verdict { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 6px 20px; align-items: center; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+  .gauge { font: 600 clamp(50px, 7vw, 74px)/0.95 var(--font-mono); letter-spacing: -.04em; color: var(--ink-2); min-width: 3.2ch; }
   .gauge.good { color: var(--signal); } .gauge.weak { color: var(--signal-2); }
   .meta { font-size: 14.5px; color: var(--ink-2); }
   .meta b { color: var(--ink); font-weight: 600; }
-  .chartbox { position: relative; margin-top: 14px; }
+
+  .block-h { font: 600 11.5px/1.4 var(--font-mono); text-transform: uppercase; letter-spacing: .12em; color: var(--ink-2);
+             margin: 20px 0 8px; display: flex; justify-content: space-between; gap: 6px 12px; flex-wrap: wrap; }
+  .block-h b { color: var(--ink); font-weight: 600; }
+
+  /* start-year strip: one row per decade, one cell per retirement year */
+  .strip { display: grid; grid-template-columns: 3.4rem repeat(10, minmax(0, 1fr)); gap: 3px; font-family: var(--font-mono); }
+  .strip .dec { font: 600 11.5px/1 var(--font-mono); color: var(--ink-2); align-self: center; }
+  .strip button { font: 600 12px/1.15 var(--font-mono); padding: 5px 2px 4px; min-height: 38px; cursor: pointer; text-align: center;
+                  border: 1px solid var(--edge); background: var(--paper); color: var(--ink); }
+  .strip button .s { display: block; font-weight: 400; font-size: 10.5px; color: inherit; opacity: .9; }
+  .strip button.ok { background: color-mix(in srgb, var(--signal) 18%, var(--paper)); border-color: var(--signal); }
+  .strip button.fail { background: var(--signal-2); border-color: var(--signal-2); color: var(--paper); }
+  .strip button.open { border-style: dashed; color: var(--ink-2); }
+  .strip button.sel { outline: 2px solid var(--ink); outline-offset: 1px; }
+  .strip button:hover { border-color: var(--ink); }
+  .strip .blank { min-height: 38px; }
+  .strip .short { display: none; }
+  @media (max-width: 620px) {
+    .strip { grid-template-columns: 2.6rem repeat(10, minmax(0, 1fr)); gap: 2px; }
+    .strip .full, .strip button .s { display: none; }
+    .strip .short { display: inline; }
+    .strip button { min-height: 30px; font-size: 11px; padding: 4px 0; }
+    .strip .blank { min-height: 30px; }
+  }
+  .legend { display: flex; gap: 6px 18px; flex-wrap: wrap; font: 12.5px var(--font-mono); color: var(--ink-2); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 7px; }
+  .sw { width: 22px; height: 10px; display: inline-block; border: 1px solid var(--edge); }
+  .sw.ok { background: color-mix(in srgb, var(--signal) 18%, var(--paper)); border-color: var(--signal); }
+  .sw.fail { background: var(--signal-2); border-color: var(--signal-2); }
+  .sw.open { border-style: dashed; }
+  .sw.b1 { border: 0; background: color-mix(in srgb, var(--signal) 22%, var(--paper)); }
+  .sw.b2 { border: 0; background: color-mix(in srgb, var(--signal) 50%, var(--paper)); }
+  .sw.md { border: 0; background: var(--signal); height: 3px; }
+  .sw.pick { border: 0; background: var(--ink); height: 2px; }
+  .sw.zr { border: 0; height: 0; border-top: 2px dashed var(--signal-2); }
+  .detail { font: 13px/1.5 var(--font-mono); color: var(--ink); margin: 8px 0 0; min-height: 1.5em; }
+
+  .chartbox { position: relative; }
   canvas { width: 100%; height: auto; display: block; border: 1px solid var(--rule); background: var(--paper); }
   canvas:focus-visible { outline: 2px solid var(--signal); outline-offset: 2px; }
   .readout { font: 13px/1.5 var(--font-mono); color: var(--ink); min-height: 1.5em; margin: 8px 0 0; }
-  .legend { display: flex; gap: 6px 18px; flex-wrap: wrap; font: 12.5px var(--font-mono); color: var(--ink-2); margin-top: 8px; }
-  .legend span { display: inline-flex; align-items: center; gap: 7px; }
-  .sw { width: 22px; height: 10px; display: inline-block; }
-  .sw.b1 { background: color-mix(in srgb, var(--signal) 22%, var(--paper)); }
-  .sw.b2 { background: color-mix(in srgb, var(--signal) 50%, var(--paper)); }
-  .sw.md { background: var(--signal); height: 3px; }
-  .sw.zr { height: 0; border-top: 2px dashed var(--signal-2); }
+
+  .solver { border: 1px solid var(--edge); background: var(--paper); margin-top: 6px; }
+  .solver-h { display: flex; justify-content: space-between; align-items: center; gap: 8px 14px; flex-wrap: wrap; padding: 9px 12px; border-bottom: 1px solid var(--edge); }
+  .solver-h p { margin: 0; font: 600 15px/1.35 var(--font-body); }
+  .solver-h label { font: 12.5px var(--font-mono); color: var(--ink-2); display: inline-flex; gap: 8px; align-items: center; }
+  .solver-h select { font: 600 13px var(--font-mono); padding: 4px 6px; background: var(--panel); color: var(--ink); border: 1px solid var(--edge); }
+  .levers { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 1100px) { .levers { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 440px) { .levers { grid-template-columns: 1fr; } }
+  .lever { padding: 10px 12px 12px; border-right: 1px solid var(--rule); border-bottom: 1px solid var(--rule); min-width: 0; }
+  .lever .k { font: 600 11px/1.3 var(--font-mono); text-transform: uppercase; letter-spacing: .1em; color: var(--ink-2); margin: 0 0 4px; }
+  .lever .v { font: 600 22px/1.15 var(--font-mono); margin: 0; color: var(--ink); }
+  .lever .d { font: 12.5px/1.4 var(--font-body); color: var(--ink-2); margin: 3px 0 8px; min-height: 2.8em; }
+  .lever button { font: 600 12.5px/1 var(--font-body); padding: 7px 10px; border: 1px solid var(--edge); background: var(--panel); color: var(--ink); cursor: pointer; }
+  .lever button:hover { border-color: var(--ink); background: var(--paper); }
+  .solver-f { margin: 0; padding: 8px 12px 10px; font: 12.5px/1.45 var(--font-body); color: var(--ink-2); }
+
+  .skeleton { background: var(--rule); border-radius: 0; color: transparent !important; }
+  .skeleton * { visibility: hidden; }
+  @media (prefers-reduced-motion: no-preference) {
+    .skeleton { animation: sk 1.6s ease-in-out infinite; }
+    @keyframes sk { 0%,100% { opacity: 1 } 50% { opacity: 0.55 } }
+  }
 
   .notes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 40px; margin: 34px 0 0; }
   @media (max-width: 760px) { .notes { grid-template-columns: 1fr; } }
@@ -100,37 +168,70 @@
 <div class="wrap">
   <div class="masthead">
     <p class="name">When can I retire?</p>
-    <p class="meta">FIRE Monte Carlo / 5,000 paths / <a href="overview/">write-up</a></p>
+    <p class="meta">US returns 1871 to 2022 / three engines / <a href="overview/">write-up</a></p>
   </div>
 
   <header class="intro">
     <p class="kicker">Runs in your browser, nothing is sent anywhere</p>
-    <h1>The chance your savings last, from 5,000 simulated markets</h1>
-    <p class="lede">A rule like "save 25 times your spending" gives one answer for an average future. This plays your plan forward 5,000 times with a random return each year and counts how often the money lasts.</p>
+    <h1>Would your plan have survived 1929, 1966 or 1973?</h1>
+    <p class="lede">This simulator replays your plan through every stretch of US market history since 1871, or resamples that history into thousands of new paths, and finds the smallest change that gets the plan to 90%. Everything is in today's dollars: returns are after inflation, and spending, savings and pension hold their purchasing power.</p>
   </header>
 
   <main class="app">
     <section class="inputs" aria-label="Your plan">
-      <p class="sec">Your plan</p>
-      <div class="field"><label for="age">Current age</label><input id="age" type="number" value="32" min="18" max="80"></div>
-      <div class="field"><label for="retire">Planned retirement age</label><input id="retire" type="number" value="50" min="30" max="85"></div>
-      <div class="field"><label for="balance">Invested savings ($)</label><input id="balance" type="number" value="150000" step="1000"></div>
-      <div class="field"><label for="contrib">Yearly contribution until retirement ($)</label><input id="contrib" type="number" value="40000" step="1000"></div>
-      <div class="field"><label for="spend">Yearly spending in retirement ($)<span class="hint">in today's dollars</span></label><input id="spend" type="number" value="60000" step="1000"></div>
-      <div class="field"><label for="until">Plan until age</label><input id="until" type="number" value="95" min="70" max="105"></div>
-      <div class="field slider"><label for="ret">Expected real return<span class="hint">after inflation</span></label><span class="val" id="retv">5.0%</span><input id="ret" type="range" min="1" max="9" step="0.1" value="5"></div>
-      <div class="field slider"><label for="vol">Market volatility<span class="hint">year-to-year swings</span></label><span class="val" id="volv">13.0%</span><input id="vol" type="range" min="4" max="22" step="0.5" value="13"></div>
-      <div class="actions">
-        <button id="run" type="button">Run 5,000 simulations</button>
-        <button id="earliest" type="button">Find earliest age for 90%</button>
-      </div>
+      <p class="sec"><span>Your plan</span><span class="n">01</span></p>
+      <div class="field"><label for="age">Current age</label><input id="age" type="number" value="32" min="18" max="90"></div>
+      <div class="field"><label for="retire">Retirement age<span class="hint">last year of saving</span></label><input id="retire" type="number" value="50" min="18" max="100"></div>
+      <div class="field"><label for="until">Plan until age</label><input id="until" type="number" value="95" min="40" max="110"></div>
+      <div class="field"><label for="balance">Invested savings ($)</label><input id="balance" type="number" value="150000" step="1000" min="0"></div>
+      <div class="field"><label for="contrib">Saved each year until retirement ($)</label><input id="contrib" type="number" value="40000" step="1000" min="0"></div>
+
+      <p class="sec"><span>Spending in retirement</span><span class="n">02</span></p>
+      <div class="field"><label for="spend">Target spending a year ($)<span class="hint">today's dollars, includes any pension</span></label><input id="spend" type="number" value="60000" step="1000" min="0"></div>
+      <div class="field wide"><label for="rule">Spending rule<span class="hint" id="ruleHint"></span></label>
+        <select id="rule">
+          <option value="constant">Constant real amount</option>
+          <option value="percent">Percentage of portfolio</option>
+          <option value="guardrails">Guardrails (Guyton-Klinger style)</option>
+        </select></div>
+      <div class="field" data-rule="percent"><label for="rate">Withdraw each year (% of portfolio)</label><input id="rate" type="number" value="4" step="0.1" min="0.5" max="20"></div>
+      <div class="field" data-rule="percent guardrails"><label for="floor">Floor (% of target)<span class="hint">spending never drops below</span></label><input id="floor" type="number" value="75" step="5" min="0" max="100"></div>
+      <div class="field" data-rule="percent guardrails"><label for="ceiling">Ceiling (% of target)</label><input id="ceiling" type="number" value="150" step="5" min="100" max="400"></div>
+      <div class="field"><label for="pension">Pension or Social Security ($ a year)</label><input id="pension" type="number" value="0" step="1000" min="0"></div>
+      <div class="field"><label for="pensionAge">Pension starts at age</label><input id="pensionAge" type="number" value="67" min="40" max="100"></div>
+
+      <p class="sec"><span>Portfolio</span><span class="n">03</span></p>
+      <div class="field slider"><label for="stock">Stocks<span class="hint">S&amp;P Composite; the rest in 10-year Treasuries, rebalanced yearly</span></label><span class="val" id="stockv">75%</span><input id="stock" type="range" min="0" max="100" step="5" value="75"></div>
+      <div class="field check"><input id="glide" type="checkbox"><label for="glide">Glide path: move to a different mix by retirement</label></div>
+      <div class="field slider" id="glideField" hidden><label for="stockAtRetire">Stocks at retirement<span class="hint">straight line from today, then held</span></label><span class="val" id="stockAtRetirev">50%</span><input id="stockAtRetire" type="range" min="0" max="100" step="5" value="50"></div>
+      <div class="field slider" data-mode="bootstrap"><label for="block">Block length (years)<span class="hint">history is resampled in runs this long</span></label><span class="val" id="blockv">10</span><input id="block" type="range" min="1" max="20" step="1" value="10"></div>
+      <div class="field slider" data-mode="normal"><label for="muS">Stock real return (mean)<span class="hint">history: <span id="histMu"></span></span></label><span class="val" id="muSv"></span><input id="muS" type="range" min="2" max="12" step="0.1"></div>
+      <div class="field slider" data-mode="normal"><label for="sdS">Stock volatility<span class="hint">history: <span id="histSd"></span></span></label><span class="val" id="sdSv"></span><input id="sdS" type="range" min="5" max="30" step="0.5"></div>
     </section>
 
-    <section class="out" id="result" aria-live="polite">
-      <div class="verdict">
+    <section class="out" aria-label="Results">
+      <div class="modes" role="radiogroup" aria-label="Engine">
+        <label><input type="radio" name="mode" value="normal">Normal draws<span>bell-curve years</span></label>
+        <label><input type="radio" name="mode" value="bootstrap">Block bootstrap<span>resampled history</span></label>
+        <label><input type="radio" name="mode" value="historical" checked>Historical<span>every start year</span></label>
+      </div>
+      <p class="modeline" id="modeline"></p>
+
+      <div class="verdict" aria-live="polite">
         <div class="gauge" id="gauge">...</div>
         <div class="meta" id="meta">Running the default plan.</div>
       </div>
+
+      <p class="block-h"><span>Every retirement year in the record</span><b id="stripSum"></b></p>
+      <div class="strip" id="strip" aria-label="Outcome for each historical retirement year"></div>
+      <div class="legend">
+        <span><i class="sw ok"></i>lasted to the plan-until age</span>
+        <span><i class="sw fail"></i>ran out</span>
+        <span><i class="sw open"></i>not finished: data ends 2022</span>
+      </div>
+      <p class="detail" id="detail" aria-live="polite"></p>
+
+      <p class="block-h"><span id="fanTitle">Portfolio by age, today's dollars</span></p>
       <div class="chartbox">
         <canvas id="chart" width="1640" height="820" tabindex="0" aria-label="Fan chart of portfolio value by age. Use the left and right arrow keys to read the percentiles at each age."></canvas>
       </div>
@@ -139,238 +240,374 @@
         <span><i class="sw b1"></i>10th to 90th percentile</span>
         <span><i class="sw b2"></i>25th to 75th</span>
         <span><i class="sw md"></i>median</span>
-        <span><i class="sw zr"></i>zero, money ran out</span>
+        <span id="pickLegend" hidden><i class="sw pick"></i><span id="pickName">selected year</span></span>
+        <span><i class="sw zr"></i>zero</span>
+      </div>
+
+      <p class="block-h"><span>What gets this plan there?</span></p>
+      <div class="solver" id="solver">
+        <div class="solver-h">
+          <p id="solverHead">Smallest single change on each lever</p>
+          <label for="target">Target <select id="target"><option value="0.8">80%</option><option value="0.85">85%</option><option value="0.9" selected>90%</option><option value="0.95">95%</option></select></label>
+        </div>
+        <div class="levers" id="levers"></div>
+        <p class="solver-f" id="solverFoot">Each lever moves alone; the others stay as you set them. Results use the engine selected above.</p>
       </div>
     </section>
   </main>
 
   <div class="notes">
     <section>
-      <h2>How a run works</h2>
-      <p>Each simulation plays your life forward one year at a time. The portfolio grows by a random return drawn from a bell curve around the average and volatility you set; you add contributions until retirement, then withdraw your spending each year after. The success rate is the share of the 5,000 paths that never run out before your plan-until age.</p>
+      <h2>Where the numbers come from</h2>
+      <p>Returns are built from Robert Shiller's monthly data: S&amp;P Composite prices and dividends, the CPI and the 10-year Treasury yield, January to January. His file currently runs to September 2023, so the last full year here is 2022 and the record covers 152 years from 1871. Bond returns are a standard approximation from the yield. The <a href="overview/">write-up</a> has the method, a check against Damodaran's NYU Stern series and a check against the Trinity study.</p>
     </section>
     <section>
-      <h2>Why not the 4% rule?</h2>
-      <p>The 4% rule and "25 times your expenses" describe an average future, but you only retire once, and the order of good and bad years matters: a crash in the first years of retirement does far more damage than the same crash twenty years in. Replaying the plan across thousands of random futures turns a yes or no into a probability. This is a teaching tool, not financial advice.</p>
+      <h2>What it leaves out</h2>
+      <p>This is US history only, one of the best-performing markets of the period, so it is not a forecast. There are no taxes, fees, one-off costs or changes in spending with age, and the historical mode has only about 90 overlapping 63-year windows for the default plan. It is an educational tool and does not give financial advice.</p>
     </section>
   </div>
 
-  <footer>Vanilla JavaScript, one file, no data leaves your browser. MIT License, 2026 Jeremy Lee. <a href="https://github.com/lyhjeremy/fire-retirement-simulator">Source on GitHub</a> · <a href="overview/">Write-up</a></footer>
+  <footer>Vanilla JavaScript, no libraries, nothing leaves your browser. Data: <a href="http://www.econ.yale.edu/~shiller/data.htm">Robert Shiller</a>. MIT License, 2026 Jeremy Lee. <a href="https://github.com/lyhjeremy/fire-retirement-simulator">Source on GitHub</a> · <a href="overview/">Write-up</a></footer>
 </div>
 
+<script src="data/returns.js"></script>
+<script src="engine.js"></script>
 <script>
 (function(){
   const $ = id => document.getElementById(id);
-  const fmt = n => '$' + Math.round(n).toLocaleString();
-  // sliders
-  $('ret').addEventListener('input', e=>$('retv').textContent = (+e.target.value).toFixed(1)+'%');
-  $('vol').addEventListener('input', e=>$('volv').textContent = (+e.target.value).toFixed(1)+'%');
+  const D = self.RETURNS;
+  const fmt = n => '$' + Math.round(n).toLocaleString('en-US');
+  const money = v => v >= 1e6 ? '$' + (v/1e6).toFixed(v >= 1e7 ? 1 : 2) + 'M' : '$' + Math.round(v/1000) + 'k';
+  const pct = x => Math.round(x*100) + '%';
+  const hs = FireEngine.stats(D.stock);
+  const HIST_MU = Math.round(hs.mean*1000)/10, HIST_SD = Math.round(hs.sd*200)/2;
 
-  // standard normal via Box-Muller
-  function randn(){
-    let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
-    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
-  }
+  $('histMu').textContent = HIST_MU.toFixed(1) + '%';
+  $('histSd').textContent = HIST_SD.toFixed(1) + '%';
+  $('muS').value = HIST_MU; $('sdS').value = HIST_SD;
 
-  function simulate(p){
-    const years = p.until - p.age;
-    const N = p.sims;
-    // store balances per year for percentiles (year 0 .. years)
-    const cols = Array.from({length:years+1}, ()=>new Float64Array(N));
-    let success = 0;
-    const mu = p.ret/100, sd = p.vol/100;
-    for(let s=0;s<N;s++){
-      let bal = p.balance, alive = true;
-      cols[0][s] = bal;
-      for(let y=1;y<=years;y++){
-        const age = p.age + y;
-        const r = mu + sd*randn();
-        bal = bal*(1+r);
-        if(age <= p.retire) bal += p.contrib;
-        else bal -= p.spend;
-        if(bal < 0){ bal = 0; alive = false; }
-        cols[y][s] = bal;
-      }
-      if(alive && cols[years][s] > 0) success++;
-    }
-    // percentile bands
-    const pct = q => cols.map(c=>{
-      const a = Array.from(c).sort((x,y)=>x-y);
-      const idx = Math.min(a.length-1, Math.floor(q*(a.length-1)));
-      return a[idx];
-    });
-    return {
-      successRate: success/N,
-      years,
-      p10:pct(0.10), p25:pct(0.25), p50:pct(0.50), p75:pct(0.75), p90:pct(0.90)
-    };
-  }
+  const MODE_LINES = {
+    normal: 'Each year\'s stock and bond return is an independent draw from a bell curve with the mean, spread and stock/bond correlation of 1871 to 2022. 5,000 paths.',
+    bootstrap: 'Each path strings together random runs of real consecutive years from 1871 to 2022, so crashes, recoveries and fat tails come from history. 5,000 paths.',
+    historical: 'Your plan replayed through actual history, once per retirement year: the working years before it and the retirement after it, in order.'
+  };
 
+  const RULE_LINES = {
+    constant: 'Withdraw the target every year, whatever markets do.',
+    percent: 'Spend the set share of the portfolio each year (plus any pension), held between the floor and ceiling.',
+    guardrails: 'Start at the target. If the withdrawal rate drifts 20% above its starting level, cut spending 10% (not in the last 15 years); 20% below, raise it 10%. Floor and ceiling apply.'
+  };
+
+  /* ---------- inputs ---------- */
+  const NUM = ['age','retire','until','balance','contrib','spend','rate','floor','ceiling','pension','pensionAge'];
+  const mode = () => document.querySelector('input[name=mode]:checked').value;
   function readParams(){
-    return {
-      age:+$('age').value, retire:+$('retire').value, balance:+$('balance').value,
-      contrib:+$('contrib').value, spend:+$('spend').value, until:+$('until').value,
-      ret:+$('ret').value, vol:+$('vol').value, sims:5000
-    };
+    const p = { mode: mode(), rule: $('rule').value, stock: +$('stock').value, glide: $('glide').checked,
+                stockAtRetire: +$('stockAtRetire').value, block: +$('block').value, sims: 5000, seed: 2026 };
+    NUM.forEach(k => p[k] = +$(k).value);
+    p.muS = +$('muS').value === HIST_MU ? null : +$('muS').value;
+    p.sdS = +$('sdS').value === HIST_SD ? null : +$('sdS').value;
+    return p;
+  }
+  function valid(p){
+    let ok = true;
+    const bad = (id, cond) => { $(id).classList.toggle('err', cond); if (cond) ok = false; };
+    NUM.forEach(k => bad(k, !isFinite(p[k]) || p[k] < 0));
+    bad('until', p.until <= p.age || p.until - p.age > 100);
+    bad('ceiling', p.ceiling < p.floor);
+    return ok;
+  }
+  function syncVisibility(){
+    const m = mode(), r = $('rule').value;
+    document.querySelectorAll('[data-mode]').forEach(el => el.hidden = el.dataset.mode !== m);
+    document.querySelectorAll('[data-rule]').forEach(el => el.hidden = !el.dataset.rule.split(' ').includes(r));
+    $('glideField').hidden = !$('glide').checked;
+    $('modeline').textContent = MODE_LINES[m];
+    $('ruleHint').textContent = RULE_LINES[r];
+    $('stockv').textContent = $('stock').value + '%';
+    $('stockAtRetirev').textContent = $('stockAtRetire').value + '%';
+    $('blockv').textContent = $('block').value;
+    $('muSv').textContent = (+$('muS').value).toFixed(1) + '%';
+    $('sdSv').textContent = (+$('sdS').value).toFixed(1) + '%';
   }
 
-  // Chart colors come from the page tokens, so the canvas follows light and dark mode.
+  /* ---------- engine: Web Worker, or inline when workers are unavailable (file://) ---------- */
+  let worker = null, seq = 0, latestRun = 0, latestSolve = 0;
+  function inline(m){
+    if (m.kind === 'run') {
+      const r = FireEngine.run(m.p, D, true);
+      const h = m.p.mode === 'historical' ? r : FireEngine.run(Object.assign({}, m.p, {mode:'historical'}), D, true);
+      return { id: m.id, kind: 'run', r, h };
+    }
+    return { id: m.id, kind: 'solve', s: FireEngine.solve(m.p, D, m.target, m.p.sims) };
+  }
+  try {
+    worker = new Worker('worker.js');
+    worker.onmessage = e => receive(e.data);
+    worker.onerror = () => { worker = null; schedule(0); };
+  } catch (e) { worker = null; }
+  function post(m){
+    if (worker) worker.postMessage(m);
+    else setTimeout(() => receive(inline(m)), 20);
+  }
+
+  let timer = null;
+  function schedule(delay){
+    clearTimeout(timer);
+    timer = setTimeout(go, delay === undefined ? 180 : delay);
+  }
+  function go(){
+    syncVisibility();
+    const p = readParams();
+    if (!valid(p)) { $('meta').innerHTML = '<b>Check the highlighted fields.</b><br>Plan-until age has to be above your current age (at most 100 years on), amounts cannot be negative, and the ceiling cannot sit below the floor.'; return; }
+    latestRun = ++seq;
+    $('gauge').classList.add('skeleton');
+    $('levers').classList.add('skeleton');
+    post({ id: latestRun, kind: 'run', p });
+  }
+  function receive(m){
+    if (m.kind === 'run') {
+      if (m.id !== latestRun) return;
+      showRun(m.r, m.h, readParams());
+      latestSolve = ++seq;
+      post({ id: latestSolve, kind: 'solve', p: readParams(), target: +$('target').value });
+    } else {
+      if (m.id !== latestSolve) return;
+      showSolve(m.s, readParams());
+    }
+  }
+
+  /* ---------- results ---------- */
+  let last = null, cursor = null, pick = null;
+  function showRun(r, h, p){
+    last = { r, h, p };
+    const g = $('gauge');
+    g.classList.remove('skeleton');
+    g.textContent = isFinite(r.rate) ? pct(r.rate) : 'n/a';
+    g.className = 'gauge ' + (r.rate >= 0.9 ? 'good' : 'weak');
+    const W = r.W, ry = p.age + W;
+    let lines = [];
+    if (!isFinite(r.rate)) {
+      lines.push('<b>The data is too short for this plan.</b>', 'A ' + r.years + '-year plan needs ' + r.years + ' years of history; the record has ' + D.year.length + '.');
+    } else {
+      const what = p.mode === 'historical' ? (Math.round(r.rate*r.n) + ' of ' + r.n + ' historical retirement years') : ('of ' + r.n.toLocaleString('en-US') + ' paths');
+      lines.push('<b>' + (p.mode === 'historical' ? what + ' lasted to ' + p.until : 'Share ' + what + ' that last to ' + p.until) + '.</b>');
+      lines.push('Median portfolio at retirement (' + ry + '): <b>' + fmt(r.medRet) + '</b> · at ' + p.until + ': <b>' + fmt(r.medEnd) + '</b>');
+      if (p.rule !== 'constant') lines.push('Lowest year\'s spending, median path: <b>' + fmt(r.medMinC) + '</b>; 10th percentile: <b>' + fmt(r.p10MinC) + '</b>');
+      if (p.mode !== 'historical' && r.medFailAge) lines.push('Paths that fail run out at a median age of ' + r.medFailAge + '.');
+    }
+    $('meta').innerHTML = lines.join('<br>');
+    $('fanTitle').textContent = 'Portfolio by age, today\'s dollars: ' + (p.mode === 'historical' ? r.n + ' complete historical windows' : '5,000 ' + (p.mode === 'normal' ? 'normal' : 'bootstrap') + ' paths');
+    drawStrip(h, p);
+    cursor = null;
+    if (pick && !h.windows.some(w => w.year === pick)) pick = null;
+    setPick(pick);
+  }
+
+  function drawStrip(h, p){
+    const box = $('strip'), wins = h.windows;
+    const byYear = {}; wins.forEach(w => byYear[w.year] = w);
+    const done = wins.filter(w => w.complete), failed = done.filter(w => w.failAge);
+    $('stripSum').textContent = done.length ? (done.length - failed.length) + ' of ' + done.length + ' lasted' : 'no complete windows';
+    if (!wins.length) { box.innerHTML = '<p class="detail">No retirement year fits in the data for this plan.</p>'; return; }
+    const y0 = Math.floor(wins[0].year/10)*10, y1 = D.year[D.year.length-1];
+    let html = '';
+    for (let d = y0; d <= y1; d += 10) {
+      html += '<span class="dec">' + d + 's</span>';
+      for (let y = d; y < d + 10; y++) {
+        const w = byYear[y];
+        if (!w) { html += '<span class="blank"></span>'; continue; }
+        let cls, sub, label;
+        if (w.complete && w.failAge) { cls = 'fail'; sub = 'out ' + w.failAge; label = 'ran out at ' + w.failAge; }
+        else if (w.complete) { cls = 'ok'; sub = money(w.end); label = 'lasted, ' + fmt(w.end) + ' at ' + p.until; }
+        else if (w.failAge) { cls = 'fail'; sub = 'out ' + w.failAge; label = 'ran out at ' + w.failAge + ' (window not complete)'; }
+        else { cls = 'open'; sub = money(w.end); label = 'still going in ' + w.through + ' when the data ends'; }
+        html += '<button type="button" class="' + cls + (pick === y ? ' sel' : '') + '" data-y="' + y + '" aria-label="Retire in ' + y + ': ' + label + '">' +
+                '<span class="full">' + y + '</span><span class="short">' + String(y).slice(2) + '</span><span class="s">' + sub + '</span></button>';
+      }
+    }
+    box.innerHTML = html;
+  }
+  $('strip').addEventListener('click', e => {
+    const b = e.target.closest('button[data-y]'); if (!b) return;
+    const y = +b.dataset.y;
+    setPick(pick === y ? null : y);
+  });
+
+  function setPick(y){
+    pick = y;
+    document.querySelectorAll('#strip button').forEach(b => b.classList.toggle('sel', +b.dataset.y === y));
+    const { h, p } = last;
+    const w = y ? h.windows.find(x => x.year === y) : null;
+    $('pickLegend').hidden = !w;
+    if (w) {
+      $('pickName').textContent = 'retire in ' + y;
+      const W = h.W, startY = y - W;
+      let s = 'Retire in ' + y + ' at ' + (p.age + W) + (W ? ', saving through ' + startY + ' to ' + (y-1) : '') + ': ';
+      if (w.failAge) s += 'ran out at ' + w.failAge + ', in ' + (startY + w.failAge - p.age - 1) + '.';
+      else if (w.complete) s += 'lasted, with ' + fmt(w.end) + ' at ' + p.until + '.';
+      else s += 'still ' + fmt(w.end) + ' in ' + w.through + ', where the data ends.';
+      if (p.rule !== 'constant' && w.minC) s += ' Lowest year\'s spending ' + fmt(w.minC) + '.';
+      $('detail').textContent = s;
+    } else {
+      const done = h.windows.filter(x => x.complete && x.failAge);
+      $('detail').textContent = done.length ? 'Ran out: ' + done.map(x => x.year + ' (at ' + x.failAge + ')').join(', ') + '. Select a year to draw its path.' : 'No complete historical window ran out. Select a year to draw its path.';
+    }
+    draw();
+  }
+
+  /* ---------- fan chart ---------- */
   function tok(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
-  function mix(hex, pct, base){
-    const a = parseInt(hex.slice(1),16), b = parseInt(base.slice(1),16), f = pct/100;
-    const ch = (x,y)=>Math.round(((x)*f + (y)*(1-f)));
-    const r = ch(a>>16, b>>16), g = ch((a>>8)&255, (b>>8)&255), bl = ch(a&255, b&255);
-    return '#' + ((1<<24) + (r<<16) + (g<<8) + bl).toString(16).slice(1);
+  function mix(hex, pc, base){
+    const a = parseInt(hex.slice(1),16), b = parseInt(base.slice(1),16), f = pc/100;
+    const ch = (x,y) => Math.round(x*f + y*(1-f));
+    return '#' + ((1<<24) + (ch(a>>16,b>>16)<<16) + (ch((a>>8)&255,(b>>8)&255)<<8) + ch(a&255,b&255)).toString(16).slice(1);
   }
-
-  let last = null, cursor = null;
-  const geom = {padL:150, padR:36, padT:40, padB:84};
-
-  // Size the canvas to its box at 2x, taller on a phone, so labels stay readable.
+  const geom = {padL:62, padR:14, padT:20, padB:40};
   function sizeCanvas(cv){
-    const cw = cv.clientWidth || 800, ar = cw < 600 ? 0.78 : 0.5;
+    const cw = cv.clientWidth || 800, ar = cw < 600 ? 0.72 : 0.46;
     const w = Math.round(cw*2), h = Math.round(cw*ar*2);
-    if(cv.width !== w) cv.width = w;
-    if(cv.height !== h) cv.height = h;
+    if (cv.width !== w) cv.width = w;
+    if (cv.height !== h) cv.height = h;
     return w / cw;
   }
-
-  function draw(res, p){
-    const cv = $('chart'), ctx = cv.getContext('2d');
-    const s = sizeCanvas(cv);
+  function draw(){
+    if (!last) return;
+    const { r, h, p } = last, res = r;
+    const cv = $('chart'), ctx = cv.getContext('2d'), s = sizeCanvas(cv);
     geom.padL = 62*s; geom.padR = 14*s; geom.padT = 20*s; geom.padB = 40*s;
     const W = cv.width, H = cv.height, {padL, padR, padT, padB} = geom;
     const fs = px => Math.round(px*s) + 'px ';
-    const C = { paper: tok('--paper'), ink: tok('--ink'), ink2: tok('--ink-2'), rule: tok('--rule'),
-                sig: tok('--signal'), sig2: tok('--signal-2') };
+    const C = { paper: tok('--paper'), ink: tok('--ink'), ink2: tok('--ink-2'), rule: tok('--rule'), sig: tok('--signal'), sig2: tok('--signal-2') };
     const mono = tok('--font-mono');
-    ctx.clearRect(0,0,W,H);
-    ctx.fillStyle = C.paper; ctx.fillRect(0,0,W,H);
-    const maxY = Math.max(...res.p90, 1) * 1.05;
-    const x = y => padL + (W-padL-padR) * (y/res.years);
-    const yv = v => H-padB - (H-padT-padB) * (v/maxY);
-    // gridlines + y labels
+    ctx.clearRect(0,0,W,H); ctx.fillStyle = C.paper; ctx.fillRect(0,0,W,H);
+    if (!res.p90) { ctx.fillStyle = C.ink2; ctx.font = fs(13) + mono; ctx.fillText('No complete paths to chart.', padL, padT + 20*s); return; }
+    const pw = pick ? h.windows.find(x => x.year === pick) : null;
+    let top = Math.max(...res.p90, 1);
+    if (pw) top = Math.max(top, ...pw.path);
+    const raw = top / 5, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+    const step = [1, 2, 2.5, 5, 10].map(k => k*mag).find(v => v >= raw);
+    const nT = Math.ceil(top / step), maxY = nT * step;
+    const T = res.years, x = g => padL + (W-padL-padR) * (g/T), yv = v => H-padB - (H-padT-padB) * (v/maxY);
     ctx.font = fs(12) + mono; ctx.fillStyle = C.ink2; ctx.strokeStyle = C.rule; ctx.lineWidth = s;
-    for(let g=0; g<=5; g++){
-      const v = maxY*g/5, py = yv(v);
+    for (let g = 0; g <= nT; g++) {
+      const v = step*g, py = yv(v);
       ctx.beginPath(); ctx.moveTo(padL,py); ctx.lineTo(W-padR,py); ctx.stroke();
-      ctx.textAlign='right';
-      const lab = v >= 1e6 ? '$' + (v/1e6).toFixed(1) + 'M' : '$' + Math.round(v/1000) + 'k';
-      ctx.fillText(lab, padL-8*s, py+4*s);
+      ctx.textAlign = 'right'; ctx.fillText(g ? money(v) : '$0', padL-8*s, py+4*s);
     }
-    // x labels (age)
-    ctx.textAlign='center';
-    for(let g=0; g<=res.years; g+=Math.ceil(res.years/8)){
-      ctx.fillText(p.age+g, x(g), H-padB+18*s);
-    }
-    // band helper
-    const band = (lo,hi,color)=>{
+    ctx.textAlign = 'center';
+    for (let g = 0; g <= T; g += Math.ceil(T/8)) ctx.fillText(p.age+g, x(g), H-padB+18*s);
+    const band = (lo,hi,color) => {
       ctx.beginPath();
-      for(let g=0;g<=res.years;g++){ const px=x(g),py=yv(hi[g]); g===0?ctx.moveTo(px,py):ctx.lineTo(px,py); }
-      for(let g=res.years;g>=0;g--){ ctx.lineTo(x(g),yv(lo[g])); }
-      ctx.closePath(); ctx.fillStyle=color; ctx.fill();
+      for (let g = 0; g <= T; g++) { const px = x(g), py = yv(hi[g]); g === 0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); }
+      for (let g = T; g >= 0; g--) ctx.lineTo(x(g), yv(lo[g]));
+      ctx.closePath(); ctx.fillStyle = color; ctx.fill();
     };
-    band(res.p10,res.p90, mix(C.sig, 22, C.paper));
-    band(res.p25,res.p75, mix(C.sig, 50, C.paper));
-    // median line
-    ctx.beginPath(); ctx.lineWidth=2.5*s; ctx.strokeStyle=C.sig;
-    res.p50.forEach((v,g)=>{ const px=x(g),py=yv(v); g===0?ctx.moveTo(px,py):ctx.lineTo(px,py); });
-    ctx.stroke();
-    // zero line
-    ctx.strokeStyle=C.sig2; ctx.lineWidth=1.5*s; ctx.setLineDash([5*s,4*s]);
+    band(res.p10, res.p90, mix(C.sig, 22, C.paper));
+    band(res.p25, res.p75, mix(C.sig, 50, C.paper));
+    const line = (arr, color, wdt) => {
+      ctx.beginPath(); ctx.lineWidth = wdt*s; ctx.strokeStyle = color;
+      arr.forEach((v,g) => { const px = x(g), py = yv(v); g === 0 ? ctx.moveTo(px,py) : ctx.lineTo(px,py); });
+      ctx.stroke();
+    };
+    line(res.p50, C.sig, 2.5);
+    if (pw) line(pw.path, C.ink, 2);
+    ctx.strokeStyle = C.sig2; ctx.lineWidth = 1.5*s; ctx.setLineDash([5*s,4*s]);
     ctx.beginPath(); ctx.moveTo(padL,yv(0)); ctx.lineTo(W-padR,yv(0)); ctx.stroke(); ctx.setLineDash([]);
-    // retirement marker
-    const rx = x(Math.min(res.years, p.retire-p.age));
-    ctx.strokeStyle=C.ink; ctx.lineWidth=s; ctx.setLineDash([4*s,3.5*s]);
+    const rx = x(Math.min(T, res.W));
+    ctx.strokeStyle = C.ink; ctx.lineWidth = s; ctx.setLineDash([4*s,3.5*s]);
     ctx.beginPath(); ctx.moveTo(rx,padT); ctx.lineTo(rx,H-padB); ctx.stroke(); ctx.setLineDash([]);
-    ctx.fillStyle=C.ink; ctx.textAlign='left'; ctx.font = '600 ' + fs(12) + mono;
-    ctx.fillText('retire at ' + p.retire, rx+5*s, padT+11*s);
-    // axis title
-    ctx.fillStyle=C.ink2; ctx.font=fs(11.5) + mono; ctx.textAlign='center';
+    ctx.fillStyle = C.ink; ctx.textAlign = 'left'; ctx.font = '600 ' + fs(12) + mono;
+    ctx.fillText('retire at ' + (p.age + res.W), rx+5*s, padT+11*s);
+    ctx.fillStyle = C.ink2; ctx.font = fs(11.5) + mono; ctx.textAlign = 'center';
     ctx.fillText('age', (padL+W-padR)/2, H-6*s);
-    // cursor
-    if(cursor !== null && cursor <= res.years){
+    if (cursor !== null && cursor <= T) {
       const cx = x(cursor);
-      ctx.strokeStyle=C.ink; ctx.lineWidth=s;
+      ctx.strokeStyle = C.ink; ctx.lineWidth = s;
       ctx.beginPath(); ctx.moveTo(cx,padT); ctx.lineTo(cx,H-padB); ctx.stroke();
-      ctx.fillStyle=C.ink; ctx.beginPath(); ctx.arc(cx, yv(res.p50[cursor]), 4*s, 0, 2*Math.PI); ctx.fill();
+      ctx.fillStyle = C.ink; ctx.beginPath(); ctx.arc(cx, yv(res.p50[cursor]), 4*s, 0, 2*Math.PI); ctx.fill();
     }
   }
-
   function readAt(g){
-    if(!last) return;
-    const {res, p} = last;
-    cursor = Math.max(0, Math.min(res.years, g));
-    draw(res, p);
-    const zero10 = res.p10[cursor] <= 0 ? ' (10th percentile has run out)' : '';
-    $('readout').textContent = 'Age ' + (p.age + cursor) + ': median ' + fmt(res.p50[cursor]) +
-      ', 10th ' + fmt(res.p10[cursor]) + ', 90th ' + fmt(res.p90[cursor]) + zero10;
+    if (!last || !last.r.p50) return;
+    const { r, h, p } = last;
+    cursor = Math.max(0, Math.min(r.years, g));
+    draw();
+    let t = 'Age ' + (p.age + cursor) + ': median ' + fmt(r.p50[cursor]) + ', 10th ' + fmt(r.p10[cursor]) + ', 90th ' + fmt(r.p90[cursor]);
+    const pw = pick ? h.windows.find(x => x.year === pick) : null;
+    if (pw && cursor < pw.path.length) t += '; retire in ' + pick + ': ' + fmt(pw.path[cursor]);
+    $('readout').textContent = t;
   }
   const cv = $('chart');
-  cv.addEventListener('pointermove', e=>{
-    if(!last) return;
-    const rect = cv.getBoundingClientRect(), W = cv.width;
-    const px = (e.clientX - rect.left) * W / rect.width;
-    const g = Math.round((px - geom.padL) / (W - geom.padL - geom.padR) * last.res.years);
-    if(g >= 0 && g <= last.res.years) readAt(g);
+  cv.addEventListener('pointermove', e => {
+    if (!last || !last.r.p50) return;
+    const rect = cv.getBoundingClientRect(), px = (e.clientX - rect.left) * cv.width / rect.width;
+    const g = Math.round((px - geom.padL) / (cv.width - geom.padL - geom.padR) * last.r.years);
+    if (g >= 0 && g <= last.r.years) readAt(g);
   });
-  cv.addEventListener('keydown', e=>{
-    if(!last) return;
-    if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
-      e.preventDefault();
-      const start = cursor === null ? last.p.retire - last.p.age : cursor;
-      readAt(start + (e.key === 'ArrowRight' ? 1 : -1));
-    }
+  cv.addEventListener('keydown', e => {
+    if (!last || (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft')) return;
+    e.preventDefault();
+    const start = cursor === null ? last.r.W : cursor;
+    readAt(start + (e.key === 'ArrowRight' ? 1 : -1));
   });
-  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', ()=>{ if(last) draw(last.res, last.p); });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
   let lastCW = 0;
-  window.addEventListener('resize', ()=>{ const cw = cv.clientWidth; if(last && cw !== lastCW){ lastCW = cw; draw(last.res, last.p); } });
+  window.addEventListener('resize', () => { const cw = cv.clientWidth; if (cw !== lastCW) { lastCW = cw; draw(); } });
 
-  function showResult(res,p){
-    last = {res, p}; cursor = null;
-    $('readout').textContent = 'Hover the chart, or focus it and use the arrow keys, to read each age.';
-    const rate = res.successRate;
-    const g = $('gauge');
-    g.textContent = Math.round(rate*100)+'%';
-    g.className = 'gauge ' + (rate>=0.9 ? 'good' : 'weak');
-    const medEnd = res.p50[res.years];
-    const verdict = rate>=0.9 ? 'On track, high confidence your money lasts.'
-                  : rate>=0.75 ? 'Borderline. Consider working a bit longer, saving more, or spending less.'
-                  : 'Risky. This plan runs out of money in too many scenarios.';
-    $('meta').innerHTML = `<b>${verdict}</b><br>Chance of never running out by age ${p.until}.<br>`
-      + `Median portfolio at retirement: <b>${fmt(res.p50[Math.min(res.years,p.retire-p.age)])}</b> · `
-      + `median at age ${p.until}: <b>${fmt(medEnd)}</b>`;
-    draw(res,p);
-  }
-
-  $('run').addEventListener('click', ()=>{
-    const p = readParams();
-    showResult(simulate(p), p);
-    $('result').scrollIntoView({block:'nearest'});
-  });
-
-  $('earliest').addEventListener('click', ()=>{
-    const base = readParams(); base.sims = 2500;
-    let found = null;
-    for(let ra = base.age+1; ra <= base.until-1; ra++){
-      const p = Object.assign({}, base, {retire:ra});
-      if(simulate(p).successRate >= 0.90){ found = ra; break; }
-    }
-    if(found){
-      $('retire').value = found;
-      const p = readParams();
-      showResult(simulate(p), p);
-      $('meta').innerHTML = `<b>Earliest age for 90% success: ${found}.</b><br>` + $('meta').innerHTML;
+  /* ---------- solver ---------- */
+  function showSolve(s, p){
+    const box = $('levers'), L = s.levers, t = pct(s.target), met = s.met;
+    box.classList.remove('skeleton');
+    $('solverHead').textContent = met
+      ? 'This plan already reaches ' + t + ' (' + pct(s.base) + '). How far each lever can move and still hold:'
+      : 'This plan is at ' + pct(s.base) + '. Smallest single change on each lever that reaches ' + t + ':';
+    const cell = (k, v, d, apply) => '<div class="lever"><p class="k">' + k + '</p><p class="v">' + v + '</p><p class="d">' + d + '</p>' +
+      (apply ? '<button type="button" data-apply=\'' + JSON.stringify(apply) + '\'>Use this</button>' : '') + '</div>';
+    let html = '';
+    const ra = L.retire.value;
+    if (ra === null) html += cell(met ? 'Retire earlier' : 'Retire later', 'none', 'No retirement age before ' + p.until + ' reaches ' + t + '.');
+    else if (ra === p.retire) html += cell(met ? 'Retire earlier' : 'Retire later', 'age ' + ra, met ? 'Retiring even a year earlier drops below ' + t + '.' : 'No change needed.');
+    else html += cell(met ? 'Retire earlier' : 'Retire later', 'age ' + ra, Math.abs(ra - p.retire) + (Math.abs(ra - p.retire) === 1 ? ' year ' : ' years ') + (ra > p.retire ? 'later' : 'earlier') + ' than ' + p.retire + '.', { retire: ra });
+    const sv = L.spend.value;
+    if (sv === null) html += cell(met ? 'Spend more' : 'Spend less', 'none', 'Even zero spending does not reach ' + t + '.');
+    else html += cell(met ? 'Spend more' : 'Spend less', fmt(sv), (sv === p.spend ? 'No room at $500 steps.' : (sv > p.spend ? '+' : '-') + fmt(Math.abs(sv - p.spend)) + ' a year (' + Math.round((sv/p.spend - 1)*100) + '%).'), sv !== p.spend ? { spend: sv } : null);
+    const c = L.contrib;
+    if (c.na) html += cell('Save more', 'n/a', 'Already retired in this plan.');
+    else if (c.value === null) html += cell(met ? 'Save less' : 'Save more', 'none', 'No contribution up to $2M a year reaches ' + t + '.');
+    else html += cell(met ? 'Save less' : 'Save more', fmt(c.value), (c.value === p.contrib ? 'No room at $500 steps.' : (c.value > p.contrib ? '+' : '-') + fmt(Math.abs(c.value - p.contrib)) + ' a year until retirement.'), c.value !== p.contrib ? { contrib: c.value } : null);
+    const st = L.stock;
+    if (st.value === null) {
+      const top = st.curve.reduce((a, b) => b[1] > a[1] ? b : a);
+      html += cell('Change the mix', 'none', 'No fixed mix reaches ' + t + '; the best is ' + top[0] + '% stocks at ' + pct(top[1]) + '.');
     } else {
-      last = null;
-      $('gauge').textContent='n/a'; $('gauge').className='gauge weak';
-      $('meta').innerHTML = '<b>No retirement age before your plan-until reaches 90% success.</b><br>Try saving more, spending less, or a higher expected return.';
+      const rng = st.range[0] === st.range[1] ? st.range[0] + '%' : st.range[0] + '% to ' + st.range[1] + '%';
+      html += cell('Change the mix', st.value + '% stocks', (st.value === st.from && !st.glide ? 'Current mix. ' : '') + 'Fixed mixes that reach ' + t + ': ' + rng + ' stocks (some values inside may fall short).',
+        (st.value !== st.from || st.glide) ? { stock: st.value, glide: false } : null);
     }
-    $('result').scrollIntoView({block:'nearest'});
+    box.innerHTML = html;
+    $('solverFoot').textContent = 'Each lever moves alone; the others stay as you set them. Computed with the ' +
+      { normal: 'normal-draw', bootstrap: 'bootstrap', historical: 'historical' }[p.mode] + ' engine' +
+      (p.mode === 'historical' ? ', so 1 window is ' + (100 / Math.max(1, last.r.n)).toFixed(1) + ' points.' : ' on the same 5,000 seeded paths as the headline number.');
+  }
+  $('levers').addEventListener('click', e => {
+    const b = e.target.closest('button[data-apply]'); if (!b) return;
+    const a = JSON.parse(b.dataset.apply);
+    for (const k in a) {
+      if (k === 'glide') $('glide').checked = a[k];
+      else $(k).value = a[k];
+    }
+    schedule(0);
   });
 
-  // run once on load with defaults
-  window.addEventListener('load', ()=>{ const p=readParams(); showResult(simulate(p),p); });
+  /* ---------- wiring ---------- */
+  document.querySelectorAll('.inputs input, .inputs select, input[name=mode]').forEach(el => {
+    el.addEventListener('input', () => { syncVisibility(); schedule(); });
+    el.addEventListener('change', () => { syncVisibility(); schedule(); });
+  });
+  $('target').addEventListener('change', () => schedule(0));
+  syncVisibility();
+  schedule(0);
 })();
 </script>
 </body>
